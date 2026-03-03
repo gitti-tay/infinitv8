@@ -1,65 +1,67 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-dvh bg-gradient-to-b from-bg-light to-white dark:from-bg-dark dark:to-gray-900">
+      <div className="max-w-md mx-auto px-5 pt-16 pb-10 flex flex-col min-h-dvh">
+        {/* Logo & Brand */}
+        <div className="text-center mb-12">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-glow">
+            <span className="material-icons text-white text-3xl">account_balance</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">Infinity Ventures</h1>
+          <p className="text-text-muted text-sm mt-1">Professional Asset Management</p>
+        </div>
+
+        {/* Hero */}
+        <div className="flex-1 flex flex-col justify-center text-center mb-12">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-primary/10 rounded-3xl blur-3xl" />
+            <div className="relative bg-card-light dark:bg-card-dark rounded-3xl p-8 shadow-soft border border-gray-100 dark:border-gray-800">
+              <span className="material-icons text-primary text-5xl mb-4">trending_up</span>
+              <h2 className="text-xl font-bold mb-2">Institutional-Grade Assets for Everyone</h2>
+              <p className="text-text-muted text-sm leading-relaxed">
+                Access fractional ownership in premium real estate, agriculture, and healthcare investments with transparent blockchain-powered returns.
+              </p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="text-center">
+              <p className="text-xl font-bold text-primary">15%+</p>
+              <p className="text-[10px] text-text-muted">Avg. APY</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-secondary">$20M+</p>
+              <p className="text-[10px] text-text-muted">Assets Managed</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-accent">2,500+</p>
+              <p className="text-[10px] text-text-muted">Investors</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="space-y-3">
+          <Link
+            href="/auth/signup"
+            className="block w-full py-4 bg-primary text-white text-center font-semibold rounded-xl shadow-glow hover:bg-primary/90 active:scale-[0.98] transition-all"
+          >
+            Get Started
+          </Link>
+          <Link
+            href="/auth/signin"
+            className="block w-full py-4 bg-transparent text-text-main dark:text-white text-center font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary transition-colors"
+          >
+            Log In
+          </Link>
+          <p className="text-center text-[10px] text-text-muted mt-4">
+            By continuing, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
