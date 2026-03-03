@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 
 import { Header } from "@/components/ui/header";
 
+interface SumsubSDKBuilder {
+  on(event: string, handler: (...args: unknown[]) => void): SumsubSDKBuilder;
+  build(): { launch(containerId: string): void };
+}
+
 declare global {
   interface Window {
     SNSWebSDK: {
@@ -14,10 +19,7 @@ declare global {
         flowCompletedHandler: () => void,
       ): {
         withConf(conf: { lang: string }): {
-          withOptions(opts: { addViewportTag: boolean }): {
-            on(event: string, handler: (...args: unknown[]) => void): unknown;
-            build(): { launch(containerId: string): void };
-          };
+          withOptions(opts: { addViewportTag: boolean }): SumsubSDKBuilder;
         };
       };
     };
