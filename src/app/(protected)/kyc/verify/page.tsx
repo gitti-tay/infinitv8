@@ -58,13 +58,7 @@ export default function KycVerifyPage() {
   const initializedRef = useRef(false);
 
   const initializeSdk = useCallback(async () => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
     try {
-      setLoading(true);
-      setError(null);
-
       const token = await fetchKycToken();
       await loadSumsubScript();
 
@@ -90,6 +84,10 @@ export default function KycVerifyPage() {
   }, [router]);
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    // External SDK initialization — async setState calls are intentional
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     initializeSdk();
   }, [initializeSdk]);
 
@@ -117,6 +115,8 @@ export default function KycVerifyPage() {
             <button
               onClick={() => {
                 initializedRef.current = false;
+                setLoading(true);
+                setError(null);
                 initializeSdk();
               }}
               className="px-6 py-2.5 bg-gradient-to-r from-primary to-secondary text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"

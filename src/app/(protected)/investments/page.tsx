@@ -164,7 +164,7 @@ export default async function InvestmentsPage({
           {projects.map((project) => {
             const isSoldOut = project.status === "SOLD_OUT";
             const raisedAmount =
-              (project.raisedPercent / 100) * project.targetAmount;
+              (Number(project.raisedPercent) / 100) * Number(project.targetAmount);
 
             return (
               <Link
@@ -204,7 +204,7 @@ export default async function InvestmentsPage({
                       <div>
                         <p className="text-[10px] text-text-muted">APY</p>
                         <p className="text-sm font-bold text-accent">
-                          {project.apy}%
+                          {Number(project.apy)}%
                         </p>
                       </div>
                       <div>
@@ -231,19 +231,19 @@ export default async function InvestmentsPage({
                             maximumFractionDigits: 0,
                           })}{" "}
                           / $
-                          {project.targetAmount.toLocaleString("en-US", {
+                          {Number(project.targetAmount).toLocaleString("en-US", {
                             maximumFractionDigits: 0,
                           })}
                         </p>
                         <p className="text-[10px] font-medium text-primary">
-                          {project.raisedPercent}%
+                          {Number(project.raisedPercent)}%
                         </p>
                       </div>
                       <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
                           style={{
-                            width: `${Math.min(project.raisedPercent, 100)}%`,
+                            width: `${Math.min(Number(project.raisedPercent), 100)}%`,
                           }}
                         />
                       </div>

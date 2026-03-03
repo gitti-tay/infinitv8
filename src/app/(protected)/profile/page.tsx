@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/ui/header";
+import { WalletConnectButton } from "@/components/wallet/connect-button";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -129,6 +130,9 @@ export default async function ProfilePage() {
             )}
           </div>
         </div>
+
+        {/* DEX Wallet */}
+        <WalletConnectButton />
 
         {/* Settings List */}
         <div className="bg-card-light dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">

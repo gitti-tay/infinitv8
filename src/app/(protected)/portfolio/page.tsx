@@ -58,11 +58,11 @@ export default async function PortfolioPage() {
 
   const totalInvested = investments
     .filter((inv) => inv.status === "CONFIRMED")
-    .reduce((sum, inv) => sum + inv.amount, 0);
+    .reduce((sum, inv) => sum + Number(inv.amount), 0);
 
   const estimatedReturn = investments
     .filter((inv) => inv.status === "CONFIRMED")
-    .reduce((sum, inv) => sum + inv.amount * (inv.project.apy / 100), 0);
+    .reduce((sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100), 0);
 
   return (
     <>
@@ -125,7 +125,7 @@ export default async function PortfolioPage() {
             <div className="space-y-3">
               {investments.map((investment) => {
                 const estReturn =
-                  investment.amount * (investment.project.apy / 100);
+                  Number(investment.amount) * (Number(investment.project.apy) / 100);
 
                 return (
                   <Link
@@ -162,7 +162,7 @@ export default async function PortfolioPage() {
                             </p>
                             <p className="text-sm font-bold">
                               $
-                              {investment.amount.toLocaleString("en-US", {
+                              {Number(investment.amount).toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
                               })}
                             </p>
@@ -170,7 +170,7 @@ export default async function PortfolioPage() {
                           <div>
                             <p className="text-[10px] text-text-muted">APY</p>
                             <p className="text-sm font-bold text-accent">
-                              {investment.project.apy}%
+                              {Number(investment.project.apy)}%
                             </p>
                           </div>
                           <div>

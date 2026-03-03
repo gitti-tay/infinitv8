@@ -82,7 +82,7 @@ export default async function ProjectDetailPage({
   }
 
   const investorCount = project.investments.length;
-  const raisedAmount = (project.raisedPercent / 100) * project.targetAmount;
+  const raisedAmount = (Number(project.raisedPercent) / 100) * Number(project.targetAmount);
 
   return (
     <>
@@ -122,7 +122,7 @@ export default async function ProjectDetailPage({
             {[
               {
                 label: "APY",
-                value: `${project.apy}%`,
+                value: `${Number(project.apy)}%`,
                 color: "text-accent",
               },
               {
@@ -132,7 +132,7 @@ export default async function ProjectDetailPage({
               },
               {
                 label: "Min. Invest",
-                value: `$${project.minInvestment.toLocaleString("en-US")}`,
+                value: `$${Number(project.minInvestment).toLocaleString("en-US")}`,
                 color: "text-primary",
               },
               {
@@ -162,14 +162,14 @@ export default async function ProjectDetailPage({
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-sm">Funding Progress</h3>
               <span className="text-xs font-semibold text-primary">
-                {project.raisedPercent}%
+                {Number(project.raisedPercent)}%
               </span>
             </div>
             <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
               <div
                 className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
                 style={{
-                  width: `${Math.min(project.raisedPercent, 100)}%`,
+                  width: `${Math.min(Number(project.raisedPercent), 100)}%`,
                 }}
               />
             </div>
@@ -183,7 +183,7 @@ export default async function ProjectDetailPage({
               </span>
               <span>
                 $
-                {project.targetAmount.toLocaleString("en-US", {
+                {Number(project.targetAmount).toLocaleString("en-US", {
                   maximumFractionDigits: 0,
                 })}{" "}
                 target

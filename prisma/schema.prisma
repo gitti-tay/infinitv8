@@ -49,6 +49,7 @@ model User {
   email         String    @unique
   passwordHash  String
   name          String
+  walletAddress String?
   kycStatus     KycStatus @default(NONE)
   role          Role      @default(INVESTOR)
   createdAt     DateTime  @default(now())
@@ -94,13 +95,13 @@ model Project {
   description   String          @db.Text
   location      String
   category      ProjectCategory
-  apy           Float
+  apy           Decimal
   term          Int
   riskLevel     RiskLevel
   status        ProjectStatus   @default(ACTIVE)
-  raisedPercent Float           @default(0)
-  targetAmount  Float
-  minInvestment Float           @default(500)
+  raisedPercent Decimal         @default(0)
+  targetAmount  Decimal
+  minInvestment Decimal         @default(500)
   imageUrl      String?
   payout        String          @default("Monthly")
   createdAt     DateTime        @default(now())
@@ -113,7 +114,7 @@ model Investment {
   id        String           @id @default(cuid())
   userId    String
   projectId String
-  amount    Float
+  amount    Decimal
   status    InvestmentStatus @default(PENDING)
   createdAt DateTime         @default(now())
 

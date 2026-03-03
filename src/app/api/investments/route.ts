@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { apiLimiter, checkRateLimit } from "@/lib/rate-limit";
+import { createInvestmentSchema } from "@/lib/validations/investment";
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +13,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { projectId, amount } = await request.json();
+    const rateLimitResponse = await checkRateLimit(apiLimiter, session.user.id);
+    if (rateLimitResponse) return rateLimitResponse;
+
+    const body = await request.json();
+    const result = createInvestmentSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: result.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+    const { projectId, amount } = result.data;
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -26,9 +41,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (amount < project.minInvestment) {
+    if (amount < Number(project.minInvestment)) {
       return NextResponse.json(
-        { error: `Minimum investment is $${project.minInvestment}` },
+        { error: `Minimum investment is $${Number(project.minInvestment)}` },
         { status: 400 }
       );
     }
@@ -55,6 +70,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(investment, { status: 201 });
   } catch (error) {
+    logger.error({ err: error }, "Investment failed");
     return NextResponse.json(
       { error: "Investment failed" },
       { status: 500 }
@@ -77,6 +93,7 @@ export async function GET() {
 
     return NextResponse.json(investments);
   } catch (error) {
+    logger.error({ err: error }, "Failed to fetch investments");
     return NextResponse.json(
       { error: "Failed to fetch investments" },
       { status: 500 }

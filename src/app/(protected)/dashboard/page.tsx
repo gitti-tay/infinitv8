@@ -17,9 +17,9 @@ export default async function DashboardPage() {
     include: { project: true },
   });
 
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+  const totalInvested = investments.reduce((sum, inv) => sum + Number(inv.amount), 0);
   const estimatedReturn = investments.reduce(
-    (sum, inv) => sum + inv.amount * (inv.project.apy / 100),
+    (sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100),
     0
   );
 
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
                     <div>
                       <p className="text-[10px] text-text-muted">APY</p>
                       <p className="text-sm font-bold text-accent">
-                        {project.apy}%
+                        {Number(project.apy)}%
                       </p>
                     </div>
                     <div>

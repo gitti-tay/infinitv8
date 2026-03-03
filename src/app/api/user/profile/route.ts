@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -28,7 +29,7 @@ export async function GET() {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("Profile fetch error:", error);
+    logger.error({ err: error }, "Profile fetch error");
     return NextResponse.json(
       { error: "Failed to fetch profile" },
       { status: 500 }

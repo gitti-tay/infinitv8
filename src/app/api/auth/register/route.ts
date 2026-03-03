@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
+
 import bcrypt from "bcryptjs";
+
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { authLimiter, checkRateLimit, getIdentifier } from "@/lib/rate-limit";
+import { registerSchema } from "@/lib/validations/auth";
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name } = await request.json();
+    const rateLimitResponse = await checkRateLimit(authLimiter, getIdentifier(request));
+    if (rateLimitResponse) return rateLimitResponse;
 
-    if (!email || !password || !name) {
+    const body = await request.json();
+    const result = registerSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Validation failed", details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
+    const { email, password, name } = result.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -35,6 +44,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    logger.error({ err: error }, "Registration failed");
     return NextResponse.json(
       { error: "Registration failed" },
       { status: 500 }

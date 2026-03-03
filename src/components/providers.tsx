@@ -1,7 +1,30 @@
 "use client";
 
+import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
+import { WagmiProvider } from "wagmi";
+
+import { wagmiConfig } from "@/lib/wagmi";
+
+import "@rainbow-me/rainbowkit/styles.css";
+
+const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          theme={darkTheme({
+            accentColor: "#7C3AED",
+            accentColorForeground: "white",
+            borderRadius: "large",
+          })}
+        >
+          <SessionProvider>{children}</SessionProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
 }

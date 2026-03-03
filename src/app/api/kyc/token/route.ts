@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, kycLimiter } from "@/lib/rate-limit";
 import { createApplicant, getAccessToken } from "@/lib/sumsub";
 
 export async function GET() {
@@ -10,6 +12,9 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rateLimitResponse = await checkRateLimit(kycLimiter, session.user.id);
+    if (rateLimitResponse) return rateLimitResponse;
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -46,7 +51,7 @@ export async function GET() {
 
     return NextResponse.json({ token: tokenData.token });
   } catch (error) {
-    console.error("KYC token error:", error);
+    logger.error({ err: error }, "KYC token error");
     return NextResponse.json(
       { error: "Failed to generate KYC token" },
       { status: 500 }
