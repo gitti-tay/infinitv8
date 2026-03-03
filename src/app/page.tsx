@@ -3,9 +3,9 @@ import Link from "next/link";
 export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-gradient-to-b from-bg-light to-white dark:from-bg-dark dark:to-gray-900">
-      <div className="max-w-md mx-auto px-5 pt-16 pb-10 flex flex-col min-h-dvh">
+      <div className="max-w-lg mx-auto px-5 pt-12 pb-8 flex flex-col min-h-dvh">
         {/* Logo & Brand */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-glow">
             <span className="material-icons text-white text-3xl">account_balance</span>
           </div>
@@ -14,8 +14,8 @@ export default function LandingPage() {
         </div>
 
         {/* Hero */}
-        <div className="flex-1 flex flex-col justify-center text-center mb-12">
-          <div className="relative mb-8">
+        <div className="flex-1 flex flex-col justify-center text-center mb-6">
+          <div className="relative mb-6">
             <div className="absolute inset-0 bg-primary/10 rounded-3xl blur-3xl" />
             <div className="relative bg-card-light dark:bg-card-dark rounded-3xl p-8 shadow-soft border border-gray-100 dark:border-gray-800">
               <span className="material-icons text-primary text-5xl mb-4">trending_up</span>
@@ -27,7 +27,7 @@ export default function LandingPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-xl font-bold text-primary">15%+</p>
               <p className="text-[10px] text-text-muted">Avg. APY</p>
