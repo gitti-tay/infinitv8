@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  INVESTOR
+  ADMIN
+}
+
+enum KycStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProjectCategory {
+  REAL_ESTATE
+  AGRICULTURE
+  HEALTHCARE
+  COMMODITIES
+}
+
+enum ProjectStatus {
+  ACTIVE
+  SOLD_OUT
+  COMING_SOON
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InvestmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  kycStatus     KycStatus @default(NONE)
+  role          Role      @default(INVESTOR)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  investments     Investment[]
+  kycVerification KycVerification?
+  accounts        Account[]
+  sessions        Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id            String          @id @default(cuid())
+  name          String
+  ticker        String
+  description   String          @db.Text
+  location      String
+  category      ProjectCategory
+  apy           Float
+  term          Int
+  riskLevel     RiskLevel
+  status        ProjectStatus   @default(ACTIVE)
+  raisedPercent Float           @default(0)
+  targetAmount  Float
+  minInvestment Float           @default(500)
+  imageUrl      String?
+  payout        String          @default("Monthly")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  investments Investment[]
+}
+
+model Investment {
+  id        String           @id @default(cuid())
+  userId    String
+  projectId String
+  amount    Float
+  status    InvestmentStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model KycVerification {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  sumsubApplicantId   String?
+  status              KycStatus @default(PENDING)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
