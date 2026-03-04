@@ -1,106 +1,27 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Header } from "@/components/ui/header";
-
-interface Wallet {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  iconBg: string;
-  popular: boolean;
-}
-
-const wallets: Wallet[] = [
-  {
-    id: "metamask",
-    name: "MetaMask",
-    description: "Most popular wallet",
-    icon: "pets",
-    iconBg: "bg-orange-50 dark:bg-orange-900/20",
-    popular: true,
-  },
-  {
-    id: "walletconnect",
-    name: "WalletConnect",
-    description: "Scan with mobile wallet",
-    icon: "link",
-    iconBg: "bg-blue-50 dark:bg-blue-900/20",
-    popular: true,
-  },
-  {
-    id: "coinbase",
-    name: "Coinbase Wallet",
-    description: "Secure & easy to use",
-    icon: "account_balance_wallet",
-    iconBg: "bg-blue-50 dark:bg-blue-900/20",
-    popular: true,
-  },
-  {
-    id: "trust",
-    name: "Trust Wallet",
-    description: "Mobile-first wallet",
-    icon: "shield",
-    iconBg: "bg-purple-50 dark:bg-purple-900/20",
-    popular: false,
-  },
-  {
-    id: "phantom",
-    name: "Phantom",
-    description: "Solana & Ethereum",
-    icon: "visibility",
-    iconBg: "bg-purple-50 dark:bg-purple-900/20",
-    popular: false,
-  },
-  {
-    id: "ledger",
-    name: "Ledger",
-    description: "Hardware wallet",
-    icon: "lock",
-    iconBg: "bg-gray-50 dark:bg-gray-900/20",
-    popular: false,
-  },
-];
+import { useEffect } from "react";
 
 export default function ConnectWalletPage() {
   const router = useRouter();
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const { isConnected } = useAccount();
 
-  const handleConnectWallet = (walletId: string) => {
-    setSelectedWallet(walletId);
-    setIsConnecting(true);
-
-    setTimeout(() => {
-      setIsConnecting(false);
+  useEffect(() => {
+    if (isConnected) {
       router.push("/wallet");
-    }, 1500);
-  };
-
-  const popularWallets = wallets.filter((w) => w.popular);
-  const otherWallets = wallets.filter((w) => !w.popular);
+    }
+  }, [isConnected, router]);
 
   return (
     <>
       <Header title="Connect Wallet" />
-      <div className="pt-16 pb-24 px-5 animate-fadeIn space-y-6">
-        {/* Progress Indicator */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-primary">Step 1 of 3</span>
-            <span className="text-xs text-text-muted">Wallet Connection</span>
-          </div>
-          <div className="flex gap-1.5">
-            <div className="h-1 flex-1 bg-primary rounded-full" />
-            <div className="h-1 flex-1 bg-gray-200 dark:bg-gray-700 rounded-full" />
-            <div className="h-1 flex-1 bg-gray-200 dark:bg-gray-700 rounded-full" />
-          </div>
-        </div>
-
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn space-y-6">
         {/* Info Banner */}
-        <div className="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="mt-4 bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           <div className="relative">
             <div className="flex items-center gap-3 mb-3">
@@ -123,90 +44,15 @@ export default function ConnectWalletPage() {
           </div>
         </div>
 
-        {/* Popular Wallets */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg">Popular Wallets</h3>
-            <span className="text-xs text-text-muted">
-              {popularWallets.length} available
-            </span>
+        {/* RainbowKit Connect Button */}
+        <div className="bg-card-light dark:bg-card-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
+          <h3 className="font-bold text-lg mb-4 text-center">Choose Your Wallet</h3>
+          <div className="flex justify-center">
+            <ConnectButton />
           </div>
-          <div className="space-y-3">
-            {popularWallets.map((wallet) => (
-              <button
-                key={wallet.id}
-                onClick={() => handleConnectWallet(wallet.id)}
-                disabled={isConnecting && selectedWallet !== wallet.id}
-                className="w-full bg-card-light dark:bg-card-dark rounded-2xl p-5 border-2 border-gray-100 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-14 h-14 ${wallet.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}
-                  >
-                    <span className="material-symbols-outlined text-2xl text-primary">
-                      {wallet.icon}
-                    </span>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-bold">{wallet.name}</p>
-                    <p className="text-sm text-text-muted">
-                      {wallet.description}
-                    </p>
-                  </div>
-                  {isConnecting && selectedWallet === wallet.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined animate-spin text-primary">
-                        progress_activity
-                      </span>
-                      <span className="text-xs font-bold text-primary">
-                        Connecting...
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="material-symbols-outlined text-text-muted group-hover:text-primary group-hover:translate-x-1 transition-all">
-                      arrow_forward
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Other Wallets */}
-        <div>
-          <h3 className="font-bold text-lg mb-4">More Wallets</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {otherWallets.map((wallet) => (
-              <button
-                key={wallet.id}
-                onClick={() => handleConnectWallet(wallet.id)}
-                disabled={isConnecting && selectedWallet !== wallet.id}
-                className="bg-card-light dark:bg-card-dark rounded-xl p-4 border border-gray-100 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <div className="flex flex-col items-center gap-3">
-                  <div
-                    className={`w-12 h-12 ${wallet.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}
-                  >
-                    <span className="material-symbols-outlined text-xl text-primary">
-                      {wallet.icon}
-                    </span>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-sm mb-0.5">{wallet.name}</p>
-                    <p className="text-xs text-text-muted line-clamp-1">
-                      {wallet.description}
-                    </p>
-                  </div>
-                  {isConnecting && selectedWallet === wallet.id && (
-                    <span className="material-symbols-outlined animate-spin text-primary text-sm">
-                      progress_activity
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
+          <p className="text-xs text-text-muted text-center mt-4">
+            Supports MetaMask, Trust Wallet, Coinbase, WalletConnect, and more
+          </p>
         </div>
 
         {/* Security Features */}

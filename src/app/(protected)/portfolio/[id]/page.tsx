@@ -62,7 +62,7 @@ export default async function InvestmentDetailPage({
   return (
     <>
       <Header title="Investment Details" />
-      <div className="pt-14 pb-24 animate-fadeIn">
+      <div className="pt-14 pb-24 md:pb-8 animate-fadeIn">
         {/* Hero Card */}
         <div className="px-5 pt-4">
           <div

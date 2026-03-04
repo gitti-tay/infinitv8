@@ -27,7 +27,7 @@ export default async function TransactionsPage() {
   return (
     <>
       <Header title="Transaction History" />
-      <div className="pt-16 pb-24 px-5 animate-fadeIn">
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="bg-gradient-to-br from-accent to-green-600 rounded-2xl p-4 text-white">

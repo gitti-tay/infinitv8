@@ -4,7 +4,7 @@ export default function PortfolioLoading() {
   return (
     <>
       <Header title="Portfolio" showBack={false} />
-      <div className="pt-16 pb-24 px-5">
+      <div className="pt-16 pb-24 md:pb-8 px-5">
         {/* Summary card */}
         <div className="mt-4 animate-pulse bg-gradient-to-br from-primary/30 to-secondary/30 rounded-2xl p-5 h-36 mb-6" />
 

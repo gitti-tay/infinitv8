@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="pt-6 pb-24 px-5 animate-fadeIn">
+    <div className="pt-6 pb-24 md:pb-8 px-5 animate-fadeIn">
       {/* Welcome */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
         {[
           {
             icon: "account_balance_wallet",
@@ -80,6 +80,9 @@ export default async function DashboardPage() {
           },
           { icon: "send", label: "Withdraw", href: "/wallet" },
           { icon: "bar_chart", label: "Reports", href: "/portfolio" },
+          { icon: "travel_explore", label: "Invest", href: "/investments" },
+          { icon: "verified_user", label: "KYC", href: "/kyc" },
+          { icon: "settings", label: "Settings", href: "/profile" },
         ].map((action) => (
           <Link
             key={action.label}
@@ -105,12 +108,12 @@ export default async function DashboardPage() {
             View All
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-5 px-5">
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible">
           {projects.map((project) => (
             <Link
               key={project.id}
               href={`/investments/${project.id}`}
-              className="flex-shrink-0 w-64 bg-card-light dark:bg-card-dark rounded-2xl overflow-hidden shadow-soft border border-gray-100 dark:border-gray-800"
+              className="flex-shrink-0 w-64 md:w-auto bg-card-light dark:bg-card-dark rounded-2xl overflow-hidden shadow-soft border border-gray-100 dark:border-gray-800"
             >
               {/* Image */}
               <div className="h-28 bg-gradient-to-br from-primary/30 to-secondary/20 relative overflow-hidden">

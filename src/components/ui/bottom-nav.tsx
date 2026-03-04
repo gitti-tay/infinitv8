@@ -2,21 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const navItems = [
-  { href: "/dashboard", icon: "home", label: "Home" },
-  { href: "/investments", icon: "travel_explore", label: "Invest" },
-  { href: "/portfolio", icon: "pie_chart", label: "Portfolio" },
-  { href: "/wallet", icon: "account_balance_wallet", label: "Wallet" },
-  { href: "/profile", icon: "person", label: "Profile" },
-];
+import { navItems } from "@/lib/constants/navigation";
 
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 w-full bg-card-light dark:bg-card-dark border-t border-gray-200 dark:border-gray-800 z-50">
-      <div className="flex justify-around items-center h-16 max-w-md mx-auto px-2">
+    <nav className="fixed bottom-0 w-full bg-card-light dark:bg-card-dark border-t border-gray-200 dark:border-gray-800 z-50 md:hidden">
+      <div className="flex justify-around items-center h-16 px-2">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (

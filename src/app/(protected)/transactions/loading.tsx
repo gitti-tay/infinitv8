@@ -4,7 +4,7 @@ export default function TransactionsLoading() {
   return (
     <>
       <Header title="Transaction History" />
-      <div className="pt-16 pb-24 px-5 animate-pulse">
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-pulse">
         {/* Stats Cards Skeleton */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[1, 2, 3].map((i) => (

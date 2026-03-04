@@ -10,7 +10,7 @@ export default function ProtectedError({
   reset: () => void;
 }) {
   return (
-    <div className="pt-6 pb-24 px-5 flex flex-col items-center justify-center min-h-[60vh]">
+    <div className="pt-6 pb-24 md:pb-8 px-5 flex flex-col items-center justify-center min-h-[60vh]">
       <div className="w-16 h-16 mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
         <span className="material-symbols-outlined text-red-500 text-3xl">warning</span>
       </div>

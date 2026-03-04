@@ -47,7 +47,7 @@ export default async function KycStartPage() {
   return (
     <>
       <Header title="Identity Verification" />
-      <div className="pt-16 pb-24 px-5 animate-fadeIn">
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
         {/* Step Badge */}
         <div className="flex justify-center mt-4 mb-2">
           <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">

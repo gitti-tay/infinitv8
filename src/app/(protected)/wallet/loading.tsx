@@ -4,7 +4,7 @@ export default function WalletLoading() {
   return (
     <>
       <Header title="Wallet" showBack={false} />
-      <div className="pt-14 pb-24 px-5 animate-pulse">
+      <div className="pt-14 pb-24 md:pb-8 px-5 animate-pulse">
         {/* Balance Card Skeleton */}
         <div className="mt-4 bg-gradient-to-br from-primary/30 to-primary-dark/30 rounded-3xl p-6 h-64" />
         {/* Tabs Skeleton */}

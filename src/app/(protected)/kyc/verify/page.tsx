@@ -90,7 +90,7 @@ export default function KycVerifyPage() {
   return (
     <>
       <Header title="Verify Identity" />
-      <div className="pt-16 pb-24 px-5">
+      <div className="pt-16 pb-24 md:pb-8 px-5">
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />

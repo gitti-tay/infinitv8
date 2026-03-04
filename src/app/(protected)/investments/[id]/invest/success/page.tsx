@@ -19,7 +19,7 @@ export default async function InvestmentSuccessPage({
   return (
     <>
       <Header title="Confirmation" />
-      <div className="pt-16 pb-24 px-5 flex flex-col items-center animate-fadeIn">
+      <div className="pt-16 pb-24 md:pb-8 px-5 flex flex-col items-center animate-fadeIn">
         {/* Success Animation */}
         <div className="mt-12 mb-6 relative">
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-accent to-green-600 flex items-center justify-center shadow-2xl">

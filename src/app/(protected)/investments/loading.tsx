@@ -4,7 +4,7 @@ export default function InvestmentsLoading() {
   return (
     <>
       <Header title="Investments" showBack={false} />
-      <div className="pt-16 pb-24 px-5">
+      <div className="pt-16 pb-24 md:pb-8 px-5">
         {/* Search bar */}
         <div className="mt-4 mb-4">
           <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-xl h-11" />

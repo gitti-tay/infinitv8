@@ -91,7 +91,7 @@ export default async function InvestmentsPage({
   return (
     <>
       <Header title="Investments" showBack={false} />
-      <div className="pt-16 pb-24 px-5 animate-fadeIn">
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
         {/* Stats Row */}
         <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
           <div className="bg-card-light dark:bg-card-dark rounded-xl p-3 text-center border border-gray-100 dark:border-gray-800">
@@ -190,7 +190,7 @@ export default async function InvestmentsPage({
         </div>
 
         {/* Project Cards */}
-        <div className="space-y-3">
+        <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
           {projects.length === 0 && (
             <div className="text-center py-12">
               <span className="material-symbols-outlined text-4xl text-text-muted mb-2">

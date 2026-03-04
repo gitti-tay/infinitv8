@@ -103,7 +103,7 @@ export default async function ProfilePage() {
   return (
     <>
       <Header title="Settings" showBack={false} />
-      <div className="pt-16 pb-24 px-5 animate-fadeIn">
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
         {/* Profile Header */}
         <div className="flex flex-col items-center mt-6 mb-6">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center mb-3 shadow-glow">
@@ -160,7 +160,7 @@ export default async function ProfilePage() {
         <WalletConnectButton />
 
         {/* Menu Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6 mt-6">
           {menuSections.map((item) => {
             const content = (
               <>

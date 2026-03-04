@@ -72,7 +72,7 @@ export default async function KycStatusPage() {
   return (
     <>
       <Header title="Verification Status" />
-      <div className="pt-16 pb-24 px-5">
+      <div className="pt-16 pb-24 md:pb-8 px-5">
         {/* Status Icon */}
         <div className="flex justify-center mt-12 mb-6">
           <div

@@ -2,57 +2,6 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/ui/header";
 import { redirect } from "next/navigation";
 
-const notifications = [
-  {
-    id: "1",
-    icon: "payments",
-    iconBg: "bg-green-100 dark:bg-green-900/30",
-    iconColor: "text-green-600 dark:text-green-400",
-    title: "Monthly Distribution",
-    description:
-      "You received a distribution from PTF - Pacific Timber Fund",
-    amount: "+$550.00",
-    amountColor: "text-accent",
-    timestamp: "2 hours ago",
-  },
-  {
-    id: "2",
-    icon: "check_circle",
-    iconBg: "bg-blue-100 dark:bg-blue-900/30",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    title: "Investment Confirmed",
-    description:
-      "Your investment in SCN - Solar Clean Network has been confirmed",
-    amount: "$2,500.00",
-    amountColor: "text-primary",
-    timestamp: "1 day ago",
-  },
-  {
-    id: "3",
-    icon: "verified",
-    iconBg: "bg-purple-100 dark:bg-purple-900/30",
-    iconColor: "text-purple-600 dark:text-purple-400",
-    title: "KYC Approved",
-    description:
-      "Your identity verification has been approved. You can now invest in projects.",
-    amount: null,
-    amountColor: null,
-    timestamp: "3 days ago",
-  },
-  {
-    id: "4",
-    icon: "travel_explore",
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary",
-    title: "New Opportunity",
-    description:
-      "Metropolitan District Development is now open for investment at 11.8% APY",
-    amount: null,
-    amountColor: null,
-    timestamp: "5 days ago",
-  },
-];
-
 export default async function NotificationsPage() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -62,53 +11,18 @@ export default async function NotificationsPage() {
   return (
     <>
       <Header title="Notifications" showBack={false} />
-      <div className="pt-16 pb-24 px-5 animate-fadeIn">
-        <div className="flex items-center justify-between mt-4 mb-4">
-          <p className="text-sm text-text-muted">
-            {notifications.length} notifications
+      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
+        <div className="text-center py-16">
+          <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+            <span className="material-symbols-outlined text-4xl text-text-muted">
+              notifications_none
+            </span>
+          </div>
+          <h3 className="font-bold text-lg mb-2">No Notifications</h3>
+          <p className="text-sm text-text-muted max-w-xs mx-auto">
+            You&apos;re all caught up! Notifications about your investments
+            and account activity will appear here.
           </p>
-          <button className="text-xs font-bold text-primary">
-            Mark all read
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className="bg-card-light dark:bg-card-dark rounded-2xl p-4 shadow-soft border border-gray-100 dark:border-gray-800"
-            >
-              <div className="flex gap-3">
-                <div
-                  className={`w-11 h-11 flex-shrink-0 rounded-full ${notification.iconBg} flex items-center justify-center`}
-                >
-                  <span
-                    className={`material-symbols-outlined ${notification.iconColor} text-xl`}
-                  >
-                    {notification.icon}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-bold text-sm">{notification.title}</h3>
-                    {notification.amount && (
-                      <span
-                        className={`text-sm font-bold flex-shrink-0 ${notification.amountColor}`}
-                      >
-                        {notification.amount}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-text-muted text-xs mt-1 leading-relaxed">
-                    {notification.description}
-                  </p>
-                  <p className="text-text-muted text-[10px] mt-2">
-                    {notification.timestamp}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </>

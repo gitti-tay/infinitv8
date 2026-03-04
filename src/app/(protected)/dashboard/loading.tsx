@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="pt-6 pb-24 px-5">
+    <div className="pt-6 pb-24 md:pb-8 px-5">
       {/* Welcome text */}
       <div className="mb-6">
         <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-4 w-24 mb-2" />

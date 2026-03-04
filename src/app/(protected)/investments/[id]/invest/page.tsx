@@ -70,7 +70,7 @@ export default function InvestAmountPage() {
     return (
       <>
         <Header title="Invest" />
-        <div className="pt-16 pb-24 px-5 flex items-center justify-center min-h-screen">
+        <div className="pt-16 pb-24 md:pb-8 px-5 flex items-center justify-center min-h-screen">
           <div className="animate-pulse text-text-muted">Loading...</div>
         </div>
       </>
@@ -81,7 +81,7 @@ export default function InvestAmountPage() {
     return (
       <>
         <Header title="Invest" />
-        <div className="pt-16 pb-24 px-5 flex items-center justify-center min-h-screen">
+        <div className="pt-16 pb-24 md:pb-8 px-5 flex items-center justify-center min-h-screen">
           <p className="text-red-500">Project not found</p>
         </div>
       </>
@@ -247,8 +247,8 @@ export default function InvestAmountPage() {
       </div>
 
       {/* Fixed Bottom CTA */}
-      <div className="fixed bottom-16 left-0 right-0 z-40">
-        <div className="max-w-md mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
+      <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-40">
+        <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
           <button
             onClick={handleContinue}
             disabled={numericAmount <= 0}

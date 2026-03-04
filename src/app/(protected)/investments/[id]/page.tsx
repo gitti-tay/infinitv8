@@ -380,8 +380,8 @@ export default async function ProjectDetailPage({
 
       {/* Fixed Bottom CTA */}
       {project.status === "ACTIVE" && (
-        <div className="fixed bottom-16 left-0 right-0 z-40">
-          <div className="max-w-md mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
+        <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-40">
+          <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
             <Link
               href={`/investments/${project.id}/invest`}
               className="block w-full py-3.5 bg-primary text-white text-center font-bold rounded-xl shadow-glow hover:bg-primary-dark transition-colors"

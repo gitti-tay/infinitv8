@@ -73,7 +73,7 @@ export default async function PortfolioPage() {
   return (
     <>
       <Header title="Portfolio" showBack={false} />
-      <div className="pt-14 pb-24 animate-fadeIn">
+      <div className="pt-14 pb-24 md:pb-8 animate-fadeIn">
         {/* Total Value Card - Premium Design */}
         <div className="px-5 pt-4">
           <div className="relative bg-gradient-to-br from-primary via-primary-dark to-secondary rounded-3xl p-6 text-white shadow-glow overflow-hidden">
@@ -190,7 +190,7 @@ export default async function PortfolioPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
               {investments.map((investment) => {
                 const estReturn =
                   Number(investment.amount) *
