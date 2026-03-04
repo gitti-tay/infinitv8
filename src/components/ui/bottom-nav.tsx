@@ -2,29 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navItems } from "@/lib/constants/navigation";
+import { mobileNavItems } from "@/lib/constants/navigation";
 
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 w-full bg-card-light dark:bg-card-dark border-t border-gray-200 dark:border-gray-800 z-50 md:hidden">
-      <div className="flex justify-around items-center h-16 px-2">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border pb-safe z-30">
+      <div className="flex items-center justify-around h-16">
+        {mobileNavItems.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
-                isActive
-                  ? "text-primary"
-                  : "text-text-muted dark:text-gray-400 hover:text-primary"
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+                isActive ? "text-primary" : "text-text-muted"
               }`}
             >
-              <span
-                className={`material-symbols-outlined text-2xl mb-1 ${isActive ? "fill-1" : ""}`}
-              >
+              <span className={`material-symbols-outlined text-xl ${isActive ? "fill-1" : ""}`}>
                 {item.icon}
               </span>
               <span className="text-[10px] font-medium">{item.label}</span>
