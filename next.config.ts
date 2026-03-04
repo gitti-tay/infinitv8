@@ -23,9 +23,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  experimental: {
-    nodeMiddleware: true,
-  },
   turbopack: {
     root: path.resolve(__dirname),
   },
