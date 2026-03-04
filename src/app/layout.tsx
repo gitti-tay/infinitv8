@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
@@ -28,7 +28,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} font-body antialiased bg-bg-light dark:bg-bg-dark text-text-main dark:text-gray-100`}
+        className={`${manrope.variable} font-body antialiased bg-background text-text-primary`}
       >
         <Providers>{children}</Providers>
       </body>
