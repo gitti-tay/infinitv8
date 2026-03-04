@@ -4,28 +4,26 @@ import { NextResponse } from "next/server";
 
 import { logger } from "@/lib/logger";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+function getRedis() {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  return new Redis({ url, token });
+}
 
-export const authLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "60 s"),
-  prefix: "ratelimit:auth",
-});
+function createLimiter(window: number, limit: number, prefix: string) {
+  const redis = getRedis();
+  if (!redis) return null;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, `${window} s`),
+    prefix,
+  });
+}
 
-export const apiLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(20, "60 s"),
-  prefix: "ratelimit:api",
-});
-
-export const kycLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(3, "60 s"),
-  prefix: "ratelimit:kyc",
-});
+export const authLimiter = createLimiter(60, 5, "ratelimit:auth");
+export const apiLimiter = createLimiter(60, 20, "ratelimit:api");
+export const kycLimiter = createLimiter(60, 3, "ratelimit:kyc");
 
 export function getIdentifier(request: Request): string {
   return (
@@ -34,9 +32,10 @@ export function getIdentifier(request: Request): string {
 }
 
 export async function checkRateLimit(
-  limiter: Ratelimit,
+  limiter: Ratelimit | null,
   identifier: string
 ): Promise<NextResponse | null> {
+  if (!limiter) return null;
   try {
     const { success, limit, remaining, reset } = await limiter.limit(identifier);
 
