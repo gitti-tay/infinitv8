@@ -1,29 +1,47 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
 import { logger } from "@/lib/logger";
 
-function getRedis() {
+// Limiter instances are created lazily at first use to avoid
+// importing @upstash/* at build time (Nixpacks treats static
+// imports as required Docker build secrets).
+
+type Limiter = { limit: (id: string) => Promise<{ success: boolean; limit: number; remaining: number; reset: number }> };
+
+let _authLimiter: Limiter | null | undefined;
+let _apiLimiter: Limiter | null | undefined;
+let _kycLimiter: Limiter | null | undefined;
+
+async function createLimiter(window: number, cap: number, prefix: string): Promise<Limiter | null> {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
-  return new Redis({ url, token });
-}
 
-function createLimiter(window: number, limit: number, prefix: string) {
-  const redis = getRedis();
-  if (!redis) return null;
+  const { Redis } = await import("@upstash/redis");
+  const { Ratelimit } = await import("@upstash/ratelimit");
+
+  const redis = new Redis({ url, token });
   return new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(limit, `${window} s`),
+    limiter: Ratelimit.slidingWindow(cap, `${window} s`),
     prefix,
   });
 }
 
-export const authLimiter = createLimiter(60, 5, "ratelimit:auth");
-export const apiLimiter = createLimiter(60, 20, "ratelimit:api");
-export const kycLimiter = createLimiter(60, 3, "ratelimit:kyc");
+async function getAuthLimiter() {
+  if (_authLimiter === undefined) _authLimiter = await createLimiter(60, 5, "ratelimit:auth");
+  return _authLimiter;
+}
+async function getApiLimiter() {
+  if (_apiLimiter === undefined) _apiLimiter = await createLimiter(60, 20, "ratelimit:api");
+  return _apiLimiter;
+}
+async function getKycLimiter() {
+  if (_kycLimiter === undefined) _kycLimiter = await createLimiter(60, 3, "ratelimit:kyc");
+  return _kycLimiter;
+}
+
+export { getAuthLimiter as authLimiter, getApiLimiter as apiLimiter, getKycLimiter as kycLimiter };
 
 export function getIdentifier(request: Request): string {
   return (
@@ -32,9 +50,10 @@ export function getIdentifier(request: Request): string {
 }
 
 export async function checkRateLimit(
-  limiter: Ratelimit | null,
+  limiterOrGetter: Limiter | null | (() => Promise<Limiter | null>),
   identifier: string
 ): Promise<NextResponse | null> {
+  const limiter = typeof limiterOrGetter === "function" ? await limiterOrGetter() : limiterOrGetter;
   if (!limiter) return null;
   try {
     const { success, limit, remaining, reset } = await limiter.limit(identifier);
