@@ -44,6 +44,31 @@ enum InvestmentStatus {
   CANCELLED
 }
 
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  YIELD
+  TRANSFER
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum NotificationType {
+  YIELD_RECEIVED
+  INVESTMENT_CONFIRMED
+  KYC_UPDATE
+  PAYOUT_SCHEDULED
+  SYSTEM
+  ADMIN
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -61,6 +86,12 @@ model User {
   kycVerification KycVerification?
   accounts        Account[]
   sessions        Session[]
+  transactions    Transaction[]
+  walletBalances  WalletBalance[]
+  yieldPayouts    YieldPayout[]
+  notifications   Notification[]
+  adminAuditLogs  AdminAuditLog[] @relation("AdminAuditLogs")
+  settings        UserSettings?
 }
 
 model Account {
@@ -122,7 +153,9 @@ model Project {
   badge             String?
   investors         Int         @default(0)
 
-  investments Investment[]
+  investments  Investment[]
+  transactions Transaction[]
+  yieldPayouts YieldPayout[]
 }
 
 model Investment {
@@ -135,6 +168,8 @@ model Investment {
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   project Project @relation(fields: [projectId], references: [id])
+
+  yieldPayouts YieldPayout[]
 }
 
 model KycVerification {
@@ -144,6 +179,103 @@ model KycVerification {
   status              KycStatus @default(PENDING)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  userId      String
+  type        TransactionType
+  asset       String
+  amount      Decimal
+  status      TransactionStatus @default(PENDING)
+  txHash      String?
+  projectId   String?
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model WalletBalance {
+  id        String   @id @default(cuid())
+  userId    String
+  asset     String
+  network   String
+  balance   Decimal  @default(0)
+  available Decimal  @default(0)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, asset, network])
+}
+
+model YieldPayout {
+  id           String    @id @default(cuid())
+  userId       String
+  projectId    String
+  investmentId String
+  amount       Decimal
+  payoutDate   DateTime
+  paid         Boolean   @default(false)
+  paidAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project    Project    @relation(fields: [projectId], references: [id])
+  investment Investment @relation(fields: [investmentId], references: [id])
+
+  @@index([userId, payoutDate])
+  @@index([paid])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  data      Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+}
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  target    String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  admin User @relation("AdminAuditLogs", fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+}
+
+model UserSettings {
+  id                   String  @id @default(cuid())
+  userId               String  @unique
+  biometricAuth        Boolean @default(false)
+  withdrawalWhitelist  Boolean @default(false)
+  emailConfirmWithdraw Boolean @default(true)
+  antiPhishingCode     String?
+  notifyYield          Boolean @default(true)
+  notifyInvestment     Boolean @default(true)
+  notifySystem         Boolean @default(true)
+  theme                String  @default("dark")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
