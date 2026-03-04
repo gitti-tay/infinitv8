@@ -10,29 +10,29 @@ function getKycStatusBadge(status: string) {
     case "APPROVED":
       return {
         label: "Verified",
-        bg: "bg-green-100 dark:bg-green-900/30",
-        text: "text-green-600 dark:text-green-400",
+        bg: "bg-accent/10",
+        text: "text-accent",
         icon: "verified",
       };
     case "PENDING":
       return {
         label: "Pending",
-        bg: "bg-amber-100 dark:bg-amber-900/30",
-        text: "text-amber-600 dark:text-amber-400",
+        bg: "bg-amber/10",
+        text: "text-amber",
         icon: "hourglass_top",
       };
     case "REJECTED":
       return {
         label: "Rejected",
-        bg: "bg-red-100 dark:bg-red-900/30",
-        text: "text-red-600 dark:text-red-400",
+        bg: "bg-destructive/10",
+        text: "text-destructive",
         icon: "cancel",
       };
     default:
       return {
         label: "Not Verified",
-        bg: "bg-gray-100 dark:bg-gray-800",
-        text: "text-gray-500 dark:text-gray-400",
+        bg: "bg-background-tertiary",
+        text: "text-text-muted",
         icon: "shield",
       };
   }
@@ -44,42 +44,48 @@ const menuSections = [
     label: "Profile",
     description: "Personal info & preferences",
     href: "/profile",
-    color: "from-blue-500 to-blue-600",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
   },
   {
     icon: "security",
     label: "Security",
     description: "Coming soon",
     href: "",
-    color: "from-emerald-500 to-emerald-600",
+    iconBg: "bg-accent/10",
+    iconColor: "text-accent",
   },
   {
     icon: "notifications",
     label: "Notifications",
     description: "Alerts & push settings",
     href: "/notifications",
-    color: "from-amber-500 to-amber-600",
+    iconBg: "bg-amber/10",
+    iconColor: "text-amber",
   },
   {
     icon: "credit_card",
     label: "Payments",
     description: "Payment methods",
     href: "/wallet",
-    color: "from-violet-500 to-violet-600",
+    iconBg: "bg-purple/10",
+    iconColor: "text-purple",
   },
   {
     icon: "description",
     label: "Documents",
     description: "Coming soon",
     href: "",
-    color: "from-pink-500 to-pink-600",
+    iconBg: "bg-destructive/10",
+    iconColor: "text-destructive",
   },
   {
     icon: "tune",
     label: "Preferences",
     description: "Coming soon",
     href: "",
-    color: "from-cyan-500 to-cyan-600",
+    iconBg: "bg-cyan/10",
+    iconColor: "text-cyan",
   },
 ];
 
@@ -104,44 +110,49 @@ export default async function ProfilePage() {
     <>
       <Header title="Settings" showBack={false} />
       <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
-        {/* Profile Header */}
-        <div className="flex flex-col items-center mt-6 mb-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center mb-3 shadow-glow">
-            <span className="text-white text-2xl font-bold">{initial}</span>
-          </div>
-          <h2 className="font-bold text-lg">{user.name}</h2>
-          <p className="text-text-muted text-sm">{user.email}</p>
-          <div className="mt-2">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${kycBadge.bg} ${kycBadge.text}`}
-            >
-              <span className="material-symbols-outlined text-sm">
-                {kycBadge.icon}
+        {/* User Info Card */}
+        <div className="bg-card border border-border rounded-xl p-6 shadow-soft mt-4">
+          <div className="flex flex-col items-center">
+            {/* Avatar */}
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-purple flex items-center justify-center mb-3 shadow-glow">
+              <span className="text-white text-2xl font-bold">{initial}</span>
+            </div>
+            {/* Name & Email */}
+            <h2 className="font-bold text-lg text-text-primary">{user.name}</h2>
+            <p className="text-text-muted text-sm">{user.email}</p>
+            {/* KYC Badge */}
+            <div className="mt-3">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${kycBadge.bg} ${kycBadge.text}`}
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {kycBadge.icon}
+                </span>
+                {kycBadge.label}
               </span>
-              {kycBadge.label}
-            </span>
+            </div>
           </div>
         </div>
 
         {/* KYC Status Card */}
         {user.kycStatus !== "APPROVED" && (
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-5 mb-6 shadow-soft">
+          <div className="bg-card border border-border rounded-xl p-5 mt-4 shadow-soft">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs mb-1">KYC Status</p>
+                <p className="text-text-muted text-xs mb-1">KYC Status</p>
                 <div className="flex items-center gap-2">
                   <span
                     className={`material-symbols-outlined text-lg ${
                       user.kycStatus === "PENDING"
-                        ? "text-amber-400"
+                        ? "text-amber"
                         : user.kycStatus === "REJECTED"
-                          ? "text-red-400"
-                          : "text-gray-400"
+                          ? "text-destructive"
+                          : "text-text-muted"
                     }`}
                   >
                     {kycBadge.icon}
                   </span>
-                  <span className="text-white font-bold text-sm">
+                  <span className="text-text-primary font-bold text-sm">
                     {kycBadge.label}
                   </span>
                 </div>
@@ -157,32 +168,43 @@ export default async function ProfilePage() {
         )}
 
         {/* DEX Wallet */}
-        <WalletConnectButton />
+        <div className="mt-4">
+          <WalletConnectButton />
+        </div>
 
-        {/* Menu Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6 mt-6">
+        {/* Settings Menu Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-6 mb-6">
           {menuSections.map((item) => {
             const content = (
-              <>
-                <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3`}
-                >
-                  <span className="material-symbols-outlined text-white text-lg">
-                    {item.icon}
-                  </span>
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div
+                    className={`w-10 h-10 rounded-xl ${item.iconBg} flex items-center justify-center`}
+                  >
+                    <span
+                      className={`material-symbols-outlined ${item.iconColor} text-lg`}
+                    >
+                      {item.icon}
+                    </span>
+                  </div>
+                  {item.href && (
+                    <span className="material-symbols-outlined text-text-muted text-lg">
+                      chevron_right
+                    </span>
+                  )}
                 </div>
-                <p className="font-bold text-sm">{item.label}</p>
+                <p className="font-bold text-sm text-text-primary">{item.label}</p>
                 <p className="text-[10px] text-text-muted mt-0.5">
                   {item.description}
                 </p>
-              </>
+              </div>
             );
 
             if (!item.href) {
               return (
                 <div
                   key={item.label}
-                  className="bg-card-light dark:bg-card-dark rounded-2xl p-4 border border-gray-100 dark:border-gray-800 opacity-60"
+                  className="bg-card border border-border rounded-xl p-4 opacity-60 shadow-soft"
                 >
                   {content}
                 </div>
@@ -193,7 +215,7 @@ export default async function ProfilePage() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="bg-card-light dark:bg-card-dark rounded-2xl p-4 border border-gray-100 dark:border-gray-800 hover:shadow-soft transition-all"
+                className="bg-card border border-border rounded-xl p-4 hover:shadow-medium hover:border-border-light transition-all shadow-soft"
               >
                 {content}
               </Link>
@@ -210,10 +232,10 @@ export default async function ProfilePage() {
         >
           <button
             type="submit"
-            className="w-full py-3.5 border border-red-200 dark:border-red-900/50 text-red-500 text-center font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3.5 border border-destructive/20 text-destructive text-center font-bold rounded-xl hover:bg-destructive/5 transition-colors flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
-            Log Out
+            Sign Out
           </button>
         </form>
 

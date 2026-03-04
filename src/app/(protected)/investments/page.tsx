@@ -20,19 +20,19 @@ function getStatusBadge(status: string) {
   switch (status) {
     case "SOLD_OUT":
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-full">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-destructive/10 text-destructive rounded-full">
           Sold Out
         </span>
       );
     case "COMING_SOON":
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary rounded-full">
           Coming Soon
         </span>
       );
     case "ACTIVE":
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 rounded-full">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent rounded-full">
           Active
         </span>
       );
@@ -94,18 +94,18 @@ export default async function InvestmentsPage({
       <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
         {/* Stats Row */}
         <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
-          <div className="bg-card-light dark:bg-card-dark rounded-xl p-3 text-center border border-gray-100 dark:border-gray-800">
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-soft">
             <p className="text-lg font-bold text-primary">{totalProjects}</p>
             <p className="text-[10px] text-text-muted">Projects</p>
           </div>
-          <div className="bg-card-light dark:bg-card-dark rounded-xl p-3 text-center border border-gray-100 dark:border-gray-800">
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-soft">
             <p className="text-lg font-bold text-accent">
               {avgApy.toFixed(1)}%
             </p>
             <p className="text-[10px] text-text-muted">Avg APY</p>
           </div>
-          <div className="bg-card-light dark:bg-card-dark rounded-xl p-3 text-center border border-gray-100 dark:border-gray-800">
-            <p className="text-lg font-bold text-secondary">
+          <div className="bg-card rounded-xl p-3 text-center border border-border shadow-soft">
+            <p className="text-lg font-bold text-purple">
               ${formatCurrency(totalFunding, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
             </p>
             <p className="text-[10px] text-text-muted">Total Funding</p>
@@ -123,7 +123,7 @@ export default async function InvestmentsPage({
               name="q"
               defaultValue={q || ""}
               placeholder="Search projects..."
-              className="w-full pl-10 pr-4 py-2.5 bg-card-light dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
             {category && (
               <input type="hidden" name="category" value={category} />
@@ -149,7 +149,7 @@ export default async function InvestmentsPage({
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   isActive
                     ? "bg-primary text-white"
-                    : "bg-card-light dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-text-muted hover:border-primary"
+                    : "bg-card border border-border text-text-muted hover:border-primary"
                 }`}
               >
                 {cat.label}
@@ -208,19 +208,19 @@ export default async function InvestmentsPage({
             return (
               <div
                 key={project.id}
-                className={`bg-card-light dark:bg-card-dark rounded-2xl overflow-hidden shadow-soft border border-gray-100 dark:border-gray-800 relative ${
+                className={`bg-card rounded-2xl overflow-hidden shadow-soft border border-border relative ${
                   isSoldOut ? "opacity-80 grayscale" : ""
                 }`}
               >
                 {isSoldOut && (
-                  <div className="absolute inset-0 bg-white/30 dark:bg-black/30 rounded-2xl z-10 flex items-center justify-center">
-                    <span className="bg-red-500 text-white text-xs font-bold px-4 py-1.5 rounded-full -rotate-12">
+                  <div className="absolute inset-0 bg-background/30 rounded-2xl z-10 flex items-center justify-center">
+                    <span className="bg-destructive text-white text-xs font-bold px-4 py-1.5 rounded-full -rotate-12">
                       Sold Out
                     </span>
                   </div>
                 )}
                 {/* Image area */}
-                <div className="h-32 bg-gradient-to-br from-primary/20 to-secondary/10 relative overflow-hidden">
+                <div className="h-32 bg-gradient-to-br from-primary/20 to-purple/10 relative overflow-hidden">
                   {project.imageUrl?.startsWith("http") ? (
                     <img src={project.imageUrl} alt={project.name} className="w-full h-full object-cover" />
                   ) : (
@@ -239,14 +239,14 @@ export default async function InvestmentsPage({
                         {project.badge}
                       </span>
                     )}
-                    <span className="px-2.5 py-1 text-xs font-bold bg-white/90 dark:bg-card-dark/90 text-accent rounded-lg">
+                    <span className="px-2.5 py-1 text-xs font-bold bg-card/90 text-accent rounded-lg backdrop-blur-sm">
                       {Number(project.apy)}% APY
                     </span>
                   </div>
                 </div>
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="font-bold text-sm mb-0.5">
+                  <h3 className="font-bold text-sm text-text-primary mb-0.5">
                     {project.ticker} — {project.name}
                   </h3>
                   <p className="text-[10px] text-text-muted flex items-center gap-1 mb-3">
@@ -258,13 +258,13 @@ export default async function InvestmentsPage({
                   <div className="flex items-center gap-4 mb-3">
                     <div>
                       <p className="text-[10px] text-text-muted">Term</p>
-                      <p className="text-sm font-bold text-secondary">
+                      <p className="text-sm font-bold text-purple">
                         {project.term} Mo
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] text-text-muted">Min</p>
-                      <p className="text-sm font-bold">
+                      <p className="text-sm font-bold text-text-primary">
                         ${formatCurrency(Number(project.minInvestment), { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                       </p>
                     </div>
@@ -288,9 +288,9 @@ export default async function InvestmentsPage({
                         {Number(project.raisedPercent)}%
                       </p>
                     </div>
-                    <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
+                        className="h-full bg-gradient-to-r from-primary to-purple rounded-full transition-all"
                         style={{
                           width: `${Math.min(Number(project.raisedPercent), 100)}%`,
                         }}
@@ -307,7 +307,7 @@ export default async function InvestmentsPage({
                     </Link>
                     <Link
                       href={`/investments/${project.id}`}
-                      className="flex-1 py-2.5 bg-card-light dark:bg-card-dark text-center text-xs font-bold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary transition-colors"
+                      className="flex-1 py-2.5 bg-card text-text-primary text-center text-xs font-bold rounded-xl border border-border hover:border-primary transition-colors"
                     >
                       Details
                     </Link>

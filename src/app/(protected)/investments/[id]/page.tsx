@@ -110,7 +110,7 @@ export default async function ProjectDetailPage({
               {
                 label: "Term",
                 value: `${project.term} Mo`,
-                color: "text-secondary",
+                color: "text-purple",
               },
               {
                 label: "Min. Invest",
@@ -120,12 +120,12 @@ export default async function ProjectDetailPage({
               {
                 label: "Payout",
                 value: project.payout,
-                color: "text-text-main dark:text-white",
+                color: "text-text-primary",
               },
             ].map((metric) => (
               <div
                 key={metric.label}
-                className="bg-card-light dark:bg-card-dark rounded-xl p-3 text-center shadow-soft border border-gray-100 dark:border-gray-800"
+                className="bg-card rounded-xl p-3 text-center shadow-soft border border-border"
               >
                 <p className="text-[10px] text-text-muted mb-1">
                   {metric.label}
@@ -141,12 +141,12 @@ export default async function ProjectDetailPage({
         {/* Badge */}
         {project.badge && (
           <div className="px-5 mt-4">
-            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
-              <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-sm">
+            <div className="flex items-center gap-2 bg-accent/[0.06] rounded-xl p-3 border border-accent/20">
+              <span className="material-symbols-outlined text-accent text-sm">
                 verified
               </span>
-              <p className="text-[10px] text-green-700 dark:text-green-300 font-medium">
-                {project.badge} · Audited · KYC/AML Verified
+              <p className="text-[10px] text-accent font-medium">
+                {project.badge} - Audited - KYC/AML Verified
               </p>
             </div>
           </div>
@@ -154,16 +154,16 @@ export default async function ProjectDetailPage({
 
         {/* Funding Progress Card */}
         <div className="px-5 mt-4">
-          <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
+          <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-sm">Funding Progress</h3>
+              <h3 className="font-bold text-sm text-text-primary">Funding Progress</h3>
               <span className="text-xs font-semibold text-primary">
                 {Number(project.raisedPercent)}%
               </span>
             </div>
-            <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+            <div className="h-2.5 bg-background-tertiary rounded-full overflow-hidden mb-3">
               <div
-                className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
+                className="h-full bg-gradient-to-r from-primary to-purple rounded-full transition-all"
                 style={{
                   width: `${Math.min(Number(project.raisedPercent), 100)}%`,
                 }}
@@ -177,7 +177,7 @@ export default async function ProjectDetailPage({
                 ${formatCurrency(Number(project.targetAmount), { maximumFractionDigits: 0, minimumFractionDigits: 0 })} target
               </span>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-2">
+            <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-sm">
                 group
               </span>
@@ -190,14 +190,14 @@ export default async function ProjectDetailPage({
 
         {/* 5-Tab Navigation */}
         <div className="px-5 mt-4">
-          <div className="flex gap-1 overflow-x-auto hide-scrollbar bg-muted dark:bg-gray-800 rounded-xl p-1">
+          <div className="flex gap-1 overflow-x-auto hide-scrollbar bg-background-tertiary rounded-xl p-1">
             {tabs.map((t) => (
               <Link
                 key={t.key}
                 href={`/investments/${id}?tab=${t.key}`}
                 className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                   activeTab === t.key
-                    ? "bg-card-light dark:bg-card-dark text-primary shadow-sm"
+                    ? "bg-card text-primary shadow-sm"
                     : "text-text-muted hover:text-primary"
                 }`}
               >
@@ -212,8 +212,8 @@ export default async function ProjectDetailPage({
           {activeTab === "overview" && (
             <div className="space-y-4">
               {/* Investment Thesis */}
-              <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-                <h3 className="font-bold text-sm mb-3">Investment Thesis</h3>
+              <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+                <h3 className="font-bold text-sm text-text-primary mb-3">Investment Thesis</h3>
                 {(project.investmentThesis || project.description).split("\n\n").map((p, i) => (
                   <p key={i} className="text-sm text-text-muted leading-relaxed mb-3 last:mb-0">{p}</p>
                 ))}
@@ -221,8 +221,8 @@ export default async function ProjectDetailPage({
 
               {/* Key Highlights */}
               {project.keyHighlights && (
-                <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-                  <h3 className="font-bold text-sm mb-3">Key Highlights</h3>
+                <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+                  <h3 className="font-bold text-sm text-text-primary mb-3">Key Highlights</h3>
                   <div className="space-y-2.5">
                     {(project.keyHighlights as string[]).map((item, i) => (
                       <div key={i} className="flex items-start gap-2.5">
@@ -236,7 +236,7 @@ export default async function ProjectDetailPage({
 
               {/* Tagline badge */}
               {project.tagline && (
-                <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20">
+                <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                   <p className="text-xs text-primary font-medium">{project.tagline}</p>
                 </div>
               )}
@@ -244,19 +244,19 @@ export default async function ProjectDetailPage({
           )}
 
           {activeTab === "terms" && (
-            <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-              <h3 className="font-bold text-sm mb-4">Term Sheet</h3>
+            <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+              <h3 className="font-bold text-sm text-text-primary mb-4">Term Sheet</h3>
               <div className="space-y-3">
                 {project.termSheet ? (
                   Object.entries(project.termSheet as Record<string, string>).map(([key, value]) => (
                     <div
                       key={key}
-                      className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      className="flex justify-between items-center py-2 border-b border-border last:border-0"
                     >
                       <span className="text-xs text-text-muted capitalize">
                         {key.replace(/([A-Z])/g, " $1").trim()}
                       </span>
-                      <span className="text-xs font-medium text-right max-w-[55%]">{value}</span>
+                      <span className="text-xs font-medium text-text-primary text-right max-w-[55%]">{value}</span>
                     </div>
                   ))
                 ) : (
@@ -269,10 +269,10 @@ export default async function ProjectDetailPage({
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      className="flex justify-between items-center py-2 border-b border-border last:border-0"
                     >
                       <span className="text-xs text-text-muted">{item.label}</span>
-                      <span className="text-xs font-medium">{item.value}</span>
+                      <span className="text-xs font-medium text-text-primary">{item.value}</span>
                     </div>
                   ))
                 )}
@@ -281,8 +281,8 @@ export default async function ProjectDetailPage({
           )}
 
           {activeTab === "waterfall" && (
-            <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-              <h3 className="font-bold text-sm mb-4">Payout Waterfall</h3>
+            <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+              <h3 className="font-bold text-sm text-text-primary mb-4">Payout Waterfall</h3>
               <div className="space-y-3">
                 {(project.payoutWaterfall as { step: number; title: string; desc: string }[] || [
                   { step: 1, title: "Revenue Collection", desc: "Asset generates income from operations" },
@@ -297,7 +297,7 @@ export default async function ProjectDetailPage({
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-sm font-medium text-text-primary">{item.title}</p>
                       <p className="text-xs text-text-muted">{item.desc}</p>
                     </div>
                   </div>
@@ -308,8 +308,8 @@ export default async function ProjectDetailPage({
 
           {activeTab === "diligence" && (
             <div className="space-y-4">
-              <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-                <h3 className="font-bold text-sm mb-4">Verification Checklist</h3>
+              <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+                <h3 className="font-bold text-sm text-text-primary mb-4">Verification Checklist</h3>
                 <div className="space-y-3">
                   {(project.diligenceItems as { icon: string; label: string; status: string }[] || [
                     { icon: "description", label: "Legal Structure Review", status: "Verified" },
@@ -318,13 +318,13 @@ export default async function ProjectDetailPage({
                   ]).map((item) => (
                     <div
                       key={item.label}
-                      className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
                     >
                       <div className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-primary text-lg">
                           {item.icon}
                         </span>
-                        <span className="text-sm">{item.label}</span>
+                        <span className="text-sm text-text-primary">{item.label}</span>
                       </div>
                       <span className="text-xs font-medium text-accent">
                         {item.status}
@@ -336,16 +336,16 @@ export default async function ProjectDetailPage({
 
               {/* Documents */}
               {project.documents && (
-                <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-                  <h3 className="font-bold text-sm mb-4">Data Room</h3>
+                <div className="bg-card rounded-2xl p-5 shadow-soft border border-border">
+                  <h3 className="font-bold text-sm text-text-primary mb-4">Data Room</h3>
                   <div className="space-y-2">
                     {(project.documents as { name: string; type: string; size: string }[]).map((doc) => (
-                      <div key={doc.name} className="flex items-center justify-between py-2.5 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <div key={doc.name} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                         <div className="flex items-center gap-3">
-                          <span className="material-symbols-outlined text-red-500 text-lg">
+                          <span className="material-symbols-outlined text-destructive text-lg">
                             {doc.type === "PDF" ? "picture_as_pdf" : "table_chart"}
                           </span>
-                          <span className="text-sm">{doc.name}</span>
+                          <span className="text-sm text-text-primary">{doc.name}</span>
                         </div>
                         <span className="text-[10px] text-text-muted">{doc.size}</span>
                       </div>
@@ -365,9 +365,9 @@ export default async function ProjectDetailPage({
               ]).map((faq) => (
                 <div
                   key={faq.q}
-                  className="bg-card-light dark:bg-card-dark rounded-2xl p-4 shadow-soft border border-gray-100 dark:border-gray-800"
+                  className="bg-card rounded-2xl p-4 shadow-soft border border-border"
                 >
-                  <h4 className="text-sm font-medium mb-2">{faq.q}</h4>
+                  <h4 className="text-sm font-medium text-text-primary mb-2">{faq.q}</h4>
                   <p className="text-xs text-text-muted leading-relaxed">
                     {faq.a}
                   </p>
@@ -381,7 +381,7 @@ export default async function ProjectDetailPage({
       {/* Fixed Bottom CTA */}
       {project.status === "ACTIVE" && (
         <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-40">
-          <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
+          <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-background">
             <Link
               href={`/investments/${project.id}/invest`}
               className="block w-full py-3.5 bg-primary text-white text-center font-bold rounded-xl shadow-glow hover:bg-primary-dark transition-colors"

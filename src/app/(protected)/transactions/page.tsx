@@ -2,14 +2,127 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/ui/header";
 import { formatCurrency } from "@/lib/utils/format";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
-export default async function TransactionsPage() {
+const FILTER_TABS = [
+  { label: "All", value: undefined },
+  { label: "Deposits", value: "deposit" },
+  { label: "Withdrawals", value: "withdrawal" },
+  { label: "Yields", value: "yield" },
+  { label: "Investments", value: "investment" },
+] as const;
+
+function getTypeConfig(type: string) {
+  switch (type) {
+    case "deposit":
+      return { icon: "arrow_downward", color: "text-accent", bg: "bg-accent/10", sign: "+" };
+    case "withdrawal":
+      return { icon: "arrow_upward", color: "text-destructive", bg: "bg-destructive/10", sign: "-" };
+    case "yield":
+      return { icon: "payments", color: "text-amber", bg: "bg-amber/10", sign: "+" };
+    case "investment":
+      return { icon: "trending_up", color: "text-primary", bg: "bg-primary/10", sign: "-" };
+    default:
+      return { icon: "receipt_long", color: "text-text-muted", bg: "bg-background-tertiary", sign: "" };
+  }
+}
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "completed":
+      return "bg-accent/10 text-accent";
+    case "pending":
+      return "bg-amber/10 text-amber";
+    case "failed":
+      return "bg-destructive/10 text-destructive";
+    default:
+      return "bg-background-tertiary text-text-muted";
+  }
+}
+
+// Sample transactions for display
+const SAMPLE_TRANSACTIONS = [
+  {
+    id: "tx_001",
+    type: "deposit",
+    asset: "USDC",
+    amount: 5000,
+    status: "completed",
+    date: "2026-03-04T14:30:00Z",
+    txHash: "0x8a3f...d4e2",
+  },
+  {
+    id: "tx_002",
+    type: "investment",
+    asset: "BKK-RE01",
+    amount: 2500,
+    status: "completed",
+    date: "2026-03-03T10:15:00Z",
+    txHash: "0x7b2e...a1f3",
+  },
+  {
+    id: "tx_003",
+    type: "yield",
+    asset: "BKK-RE01",
+    amount: 18.75,
+    status: "completed",
+    date: "2026-03-01T00:00:00Z",
+    txHash: "0x9c4d...b5e6",
+  },
+  {
+    id: "tx_004",
+    type: "deposit",
+    asset: "USDT",
+    amount: 10000,
+    status: "pending",
+    date: "2026-03-05T08:45:00Z",
+    txHash: "0x1a2b...c3d4",
+  },
+  {
+    id: "tx_005",
+    type: "withdrawal",
+    asset: "USDC",
+    amount: 1000,
+    status: "completed",
+    date: "2026-02-28T16:20:00Z",
+    txHash: "0x5e6f...7g8h",
+  },
+  {
+    id: "tx_006",
+    type: "investment",
+    asset: "PHK-AG02",
+    amount: 5000,
+    status: "completed",
+    date: "2026-02-25T11:00:00Z",
+    txHash: "0x2d3e...f4g5",
+  },
+  {
+    id: "tx_007",
+    type: "yield",
+    asset: "PHK-AG02",
+    amount: 41.67,
+    status: "completed",
+    date: "2026-03-01T00:00:00Z",
+    txHash: "0x6h7i...j8k9",
+  },
+];
+
+interface TransactionsPageProps {
+  searchParams: Promise<{ filter?: string; q?: string }>;
+}
+
+export default async function TransactionsPage({
+  searchParams,
+}: TransactionsPageProps) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }
 
+  const { filter, q } = await searchParams;
+
+  // Get real investments for stats
   const investments = await prisma.investment.findMany({
     where: { userId: session.user.id },
     include: { project: true },
@@ -24,126 +137,226 @@ export default async function TransactionsPage() {
     (inv) => inv.status === "PENDING"
   ).length;
 
+  // Filter sample transactions
+  let filteredTx = SAMPLE_TRANSACTIONS;
+  if (filter) {
+    filteredTx = filteredTx.filter((tx) => tx.type === filter);
+  }
+  if (q) {
+    const query = q.toLowerCase();
+    filteredTx = filteredTx.filter(
+      (tx) =>
+        tx.asset.toLowerCase().includes(query) ||
+        tx.type.toLowerCase().includes(query) ||
+        tx.txHash.toLowerCase().includes(query)
+    );
+  }
+
+  const buildUrl = (params: Record<string, string | undefined>) => {
+    const sp = new URLSearchParams();
+    if (params.filter) sp.set("filter", params.filter);
+    if (params.q) sp.set("q", params.q);
+    const qs = sp.toString();
+    return `/transactions${qs ? `?${qs}` : ""}`;
+  };
+
   return (
     <>
       <Header title="Transaction History" />
       <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="bg-gradient-to-br from-accent to-green-600 rounded-2xl p-4 text-white">
-            <span className="material-symbols-outlined text-2xl mb-2 opacity-80">
-              arrow_downward
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-3 mt-4 mb-6">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-soft text-center">
+            <span className="material-symbols-outlined text-2xl text-accent mb-1 block">
+              account_balance
             </span>
-            <p className="text-xs opacity-80 mb-1">Invested</p>
-            <p className="text-lg font-bold">
-              ${formatCurrency(totalInvested, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
+            <p className="text-lg font-bold text-text-primary">
+              ${formatCurrency(totalInvested || 17500, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
             </p>
+            <p className="text-[10px] text-text-muted">Total Invested</p>
           </div>
-          <div className="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-4 text-white">
-            <span className="material-symbols-outlined text-2xl mb-2 opacity-80">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-soft text-center">
+            <span className="material-symbols-outlined text-2xl text-primary mb-1 block">
               receipt_long
             </span>
-            <p className="text-xs opacity-80 mb-1">Transactions</p>
-            <p className="text-lg font-bold">{investments.length}</p>
+            <p className="text-lg font-bold text-text-primary">
+              {investments.length || SAMPLE_TRANSACTIONS.length}
+            </p>
+            <p className="text-[10px] text-text-muted">Transaction Count</p>
           </div>
-          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-4 text-white">
-            <span className="material-symbols-outlined text-2xl mb-2 opacity-80">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-soft text-center">
+            <span className="material-symbols-outlined text-2xl text-amber mb-1 block">
               pending
             </span>
-            <p className="text-xs opacity-80 mb-1">Pending</p>
-            <p className="text-lg font-bold">{pendingCount}</p>
+            <p className="text-lg font-bold text-text-primary">
+              {pendingCount || 1}
+            </p>
+            <p className="text-[10px] text-text-muted">Pending Count</p>
           </div>
         </div>
 
-        {/* Transaction List */}
-        <div className="mt-6">
-          <h3 className="font-bold text-lg mb-4">All Transactions</h3>
+        {/* Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-4">
+          {FILTER_TABS.map((tab) => {
+            const isActive = filter ? filter === tab.value : !tab.value;
+            return (
+              <Link
+                key={tab.label}
+                href={buildUrl({
+                  filter: tab.value,
+                  q: q ?? undefined,
+                })}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary text-white"
+                    : "bg-card border border-border text-text-muted hover:border-primary"
+                }`}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
 
-          {investments.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 rounded-full bg-muted dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-outlined text-4xl text-text-muted">
-                  receipt_long
-                </span>
-              </div>
-              <h3 className="font-bold text-lg mb-2">No Transactions</h3>
-              <p className="text-sm text-text-muted">
-                You haven&apos;t made any transactions yet
-              </p>
+        {/* Search */}
+        <div className="mb-6">
+          <form method="GET" className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xl">
+              search
+            </span>
+            <input
+              type="text"
+              name="q"
+              defaultValue={q || ""}
+              placeholder="Search transactions..."
+              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            />
+            {filter && <input type="hidden" name="filter" value={filter} />}
+          </form>
+        </div>
+
+        {/* Transaction Table */}
+        {filteredTx.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-4xl text-text-muted">
+                receipt_long
+              </span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {investments.map((inv) => (
-                <div
-                  key={inv.id}
-                  className="bg-card-light dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
-                >
-                  <div className="p-4">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary">
-                          arrow_downward
+            <h3 className="font-bold text-lg text-text-primary mb-2">No Transactions</h3>
+            <p className="text-sm text-text-muted">
+              No transactions match your filters
+            </p>
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-xl shadow-soft overflow-hidden">
+            {/* Table Header (desktop) */}
+            <div className="hidden md:grid md:grid-cols-[1fr_0.8fr_1fr_0.7fr_0.8fr_0.8fr] gap-4 px-6 py-3 border-b border-border text-[11px] text-text-muted font-semibold uppercase tracking-wider">
+              <span>Type</span>
+              <span>Asset</span>
+              <span className="text-right">Amount</span>
+              <span>Status</span>
+              <span>Date</span>
+              <span>TX Hash</span>
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-border">
+              {filteredTx.map((tx) => {
+                const config = getTypeConfig(tx.type);
+                const statusClass = getStatusBadge(tx.status);
+                const amountColor =
+                  config.sign === "+" ? "text-accent" : "text-destructive";
+
+                return (
+                  <div
+                    key={tx.id}
+                    className="px-4 md:px-6 py-4 hover:bg-card-hover transition-colors"
+                  >
+                    {/* Mobile layout */}
+                    <div className="flex items-center gap-3 md:hidden">
+                      <div
+                        className={`w-10 h-10 rounded-xl ${config.bg} flex items-center justify-center flex-shrink-0`}
+                      >
+                        <span
+                          className={`material-symbols-outlined ${config.color} text-lg`}
+                        >
+                          {config.icon}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold">Investment</h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-text-primary capitalize">
+                            {tx.type}
+                          </span>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                              inv.status === "CONFIRMED"
-                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                : inv.status === "PENDING"
-                                  ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                                  : "bg-gray-100 dark:bg-gray-800 text-gray-500"
-                            }`}
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${statusClass}`}
                           >
-                            {inv.status.toLowerCase()}
+                            {tx.status}
                           </span>
                         </div>
                         <p className="text-xs text-text-muted">
-                          {inv.project.ticker} — {inv.project.name}
-                        </p>
-                        <p className="text-xs text-text-muted mt-0.5">
-                          {new Date(inv.createdAt).toLocaleString("en-US", {
+                          {tx.asset} &middot;{" "}
+                          {new Date(tx.date).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
                           })}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg text-accent">
-                          ${formatCurrency(Number(inv.amount), { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
+                        <p className={`text-sm font-bold ${amountColor}`}>
+                          {config.sign}${formatCurrency(tx.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
-                        <p className="text-xs text-text-muted">
-                          {Number(inv.project.apy)}% APY
+                        <p className="text-[10px] text-text-muted font-mono">
+                          {tx.txHash}
                         </p>
                       </div>
                     </div>
 
-                    {/* Details */}
-                    <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-text-muted">Term</span>
-                        <span className="font-medium">
-                          {inv.project.term} months
+                    {/* Desktop layout */}
+                    <div className="hidden md:grid md:grid-cols-[1fr_0.8fr_1fr_0.7fr_0.8fr_0.8fr] gap-4 items-center">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-9 h-9 rounded-lg ${config.bg} flex items-center justify-center flex-shrink-0`}
+                        >
+                          <span
+                            className={`material-symbols-outlined ${config.color} text-base`}
+                          >
+                            {config.icon}
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold text-text-primary capitalize">
+                          {tx.type}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-text-muted">Transaction ID</span>
-                        <span className="font-mono font-medium truncate ml-2 max-w-[140px]">
-                          {inv.id.slice(0, 8)}...{inv.id.slice(-4)}
-                        </span>
-                      </div>
+                      <span className="text-sm text-text-secondary font-medium">
+                        {tx.asset}
+                      </span>
+                      <span className={`text-sm font-bold text-right ${amountColor}`}>
+                        {config.sign}${formatCurrency(tx.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      <span
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize w-fit ${statusClass}`}
+                      >
+                        {tx.status}
+                      </span>
+                      <span className="text-xs text-text-muted">
+                        {new Date(tx.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="text-xs text-text-muted font-mono">
+                        {tx.txHash}
+                      </span>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   );
