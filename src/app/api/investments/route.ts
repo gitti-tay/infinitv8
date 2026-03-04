@@ -26,50 +26,60 @@ export async function POST(request: Request) {
     }
     const { projectId, amount } = result.data;
 
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
+    const userId = session.user.id;
 
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    const investment = await prisma.$transaction(async (tx) => {
+      const project = await tx.project.findUnique({
+        where: { id: projectId },
+      });
 
-    if (project.status !== "ACTIVE") {
-      return NextResponse.json(
-        { error: "Project not accepting investments" },
-        { status: 400 }
-      );
-    }
+      if (!project) {
+        throw new Error("NOT_FOUND");
+      }
 
-    if (amount < Number(project.minInvestment)) {
-      return NextResponse.json(
-        { error: `Minimum investment is $${Number(project.minInvestment)}` },
-        { status: 400 }
-      );
-    }
+      if (project.status !== "ACTIVE") {
+        throw new Error("NOT_ACTIVE");
+      }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
+      if (amount < Number(project.minInvestment)) {
+        throw new Error(`MIN_INVESTMENT:${Number(project.minInvestment)}`);
+      }
 
-    if (user?.kycStatus !== "APPROVED") {
-      return NextResponse.json(
-        { error: "KYC verification required" },
-        { status: 403 }
-      );
-    }
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+      });
 
-    const investment = await prisma.investment.create({
-      data: {
-        userId: session.user.id,
-        projectId,
-        amount,
-        status: "CONFIRMED",
-      },
+      if (user?.kycStatus !== "APPROVED") {
+        throw new Error("KYC_REQUIRED");
+      }
+
+      return tx.investment.create({
+        data: {
+          userId,
+          projectId,
+          amount,
+          status: "CONFIRMED",
+        },
+      });
     });
 
     return NextResponse.json(investment, { status: 201 });
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "NOT_FOUND") {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      }
+      if (error.message === "NOT_ACTIVE") {
+        return NextResponse.json({ error: "Project not accepting investments" }, { status: 400 });
+      }
+      if (error.message.startsWith("MIN_INVESTMENT:")) {
+        const min = error.message.split(":")[1];
+        return NextResponse.json({ error: `Minimum investment is $${min}` }, { status: 400 });
+      }
+      if (error.message === "KYC_REQUIRED") {
+        return NextResponse.json({ error: "KYC verification required" }, { status: 403 });
+      }
+    }
     logger.error({ err: error }, "Investment failed");
     return NextResponse.json(
       { error: "Investment failed" },
@@ -84,6 +94,9 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rateLimitResponse = await checkRateLimit(apiLimiter, session.user.id);
+    if (rateLimitResponse) return rateLimitResponse;
 
     const investments = await prisma.investment.findMany({
       where: { userId: session.user.id },

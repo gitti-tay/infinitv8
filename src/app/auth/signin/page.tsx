@@ -39,45 +39,76 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-bg-light dark:bg-bg-dark flex flex-col">
-      <div className="max-w-md mx-auto w-full px-5 pt-12 pb-8 flex-1 flex flex-col">
+    <div className="min-h-dvh bg-bg-light dark:bg-bg-dark flex flex-col relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute top-[-15%] right-[-10%] w-64 h-64 bg-primary/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-56 h-56 bg-secondary/10 rounded-full blur-3xl" />
+
+      <div className="max-w-md mx-auto w-full px-5 pt-10 pb-8 flex-1 flex flex-col relative z-10">
         {/* Logo */}
-        <div className="text-center mb-10">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-3 flex items-center justify-center">
-            <span className="material-icons text-white text-2xl">account_balance</span>
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-glow">
+            <span className="material-symbols-outlined text-white text-3xl">
+              account_balance_wallet
+            </span>
           </div>
-          <h1 className="text-xl font-bold">Welcome Back</h1>
-          <p className="text-text-muted text-sm mt-1">Sign in to your account</p>
+          <h1 className="text-2xl font-bold">Welcome Back</h1>
+          <p className="text-text-muted text-sm mt-1">
+            Sign in to your account
+          </p>
+
+          {/* Security badge */}
+          <div className="inline-flex items-center gap-1.5 mt-3 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
+            <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-xs">
+              lock
+            </span>
+            <span className="text-[10px] font-medium text-green-600 dark:text-green-400">
+              Bank-Grade Encryption
+            </span>
+          </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 flex-1">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">error</span>
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
-              placeholder="you@example.com"
-              required
-            />
+            <label className="block text-sm font-medium mb-2">
+              Email Address
+            </label>
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-lg">
+                mail
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium">Password</label>
+            </div>
             <div className="relative">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-lg">
+                lock
+              </span>
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow pr-12"
+                className="w-full pl-11 pr-12 py-3.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
                 placeholder="Enter your password"
                 required
               />
@@ -86,7 +117,7 @@ export default function SignInPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
               >
-                <span className="material-icons text-xl">
+                <span className="material-symbols-outlined text-xl">
                   {showPassword ? "visibility_off" : "visibility"}
                 </span>
               </button>
@@ -96,18 +127,44 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-primary text-white font-semibold rounded-xl shadow-glow hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-50"
+            className="w-full py-4 bg-primary text-white font-semibold rounded-xl shadow-glow hover:bg-primary-dark active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-text-muted mt-6">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="text-primary font-medium hover:underline">
-            Sign Up
-          </Link>
-        </p>
+        {/* Footer */}
+        <div className="mt-auto pt-6">
+          <p className="text-center text-sm text-text-muted">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/auth/signup"
+              className="text-primary font-medium hover:underline"
+            >
+              Sign Up
+            </Link>
+          </p>
+
+          {/* Trust indicators */}
+          <div className="flex justify-center items-center gap-4 mt-4">
+            <div className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-text-muted text-xs">
+                lock
+              </span>
+              <span className="text-[10px] text-text-muted">
+                256-bit SSL
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-text-muted text-xs">
+                verified_user
+              </span>
+              <span className="text-[10px] text-text-muted">
+                KYC/AML Verified
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

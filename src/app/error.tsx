@@ -11,7 +11,7 @@ export default function GlobalError({
     <div className="min-h-dvh bg-bg-light dark:bg-bg-dark flex items-center justify-center px-5">
       <div className="text-center max-w-sm">
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-          <span className="material-icons text-red-500 text-4xl">
+          <span className="material-symbols-outlined text-red-500 text-4xl">
             error_outline
           </span>
         </div>

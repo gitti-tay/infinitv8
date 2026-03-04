@@ -70,14 +70,12 @@ export default function KycVerifyPage() {
         .withConf({ lang: "en" })
         .withOptions({ addViewportTag: false })
         .on("onError", (err: unknown) => {
-          console.error("Sumsub SDK error:", err);
           setError("Verification encountered an error. Please try again.");
         });
 
       sdk.build().launch("sumsub-container");
       setLoading(false);
     } catch (err) {
-      console.error("KYC init error:", err);
       setError("Failed to initialize verification. Please try again.");
       setLoading(false);
     }
@@ -86,8 +84,6 @@ export default function KycVerifyPage() {
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    // External SDK initialization — async setState calls are intentional
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     initializeSdk();
   }, [initializeSdk]);
 
@@ -107,7 +103,7 @@ export default function KycVerifyPage() {
         {error && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-              <span className="material-icons text-red-500 text-3xl">
+              <span className="material-symbols-outlined text-red-500 text-3xl">
                 error_outline
               </span>
             </div>

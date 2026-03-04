@@ -38,21 +38,48 @@ function getKycStatusBadge(status: string) {
   }
 }
 
-const settingsItems = [
+const menuSections = [
   {
     icon: "person",
-    label: "Personal Information",
+    label: "Profile",
+    description: "Personal info & preferences",
     href: "/profile",
+    color: "from-blue-500 to-blue-600",
   },
   {
     icon: "security",
-    label: "Security & 2FA",
-    href: "/profile",
+    label: "Security",
+    description: "Coming soon",
+    href: "",
+    color: "from-emerald-500 to-emerald-600",
   },
   {
     icon: "notifications",
-    label: "Notification Settings",
+    label: "Notifications",
+    description: "Alerts & push settings",
     href: "/notifications",
+    color: "from-amber-500 to-amber-600",
+  },
+  {
+    icon: "credit_card",
+    label: "Payments",
+    description: "Payment methods",
+    href: "/wallet",
+    color: "from-violet-500 to-violet-600",
+  },
+  {
+    icon: "description",
+    label: "Documents",
+    description: "Coming soon",
+    href: "",
+    color: "from-pink-500 to-pink-600",
+  },
+  {
+    icon: "tune",
+    label: "Preferences",
+    description: "Coming soon",
+    href: "",
+    color: "from-cyan-500 to-cyan-600",
   },
 ];
 
@@ -75,90 +102,103 @@ export default async function ProfilePage() {
 
   return (
     <>
-      <Header title="Profile" showBack={false} />
-      <div className="pt-16 pb-24 px-5">
+      <Header title="Settings" showBack={false} />
+      <div className="pt-16 pb-24 px-5 animate-fadeIn">
         {/* Profile Header */}
-        <div className="flex flex-col items-center mt-6 mb-8">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-3">
+        <div className="flex flex-col items-center mt-6 mb-6">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center mb-3 shadow-glow">
             <span className="text-white text-2xl font-bold">{initial}</span>
           </div>
           <h2 className="font-bold text-lg">{user.name}</h2>
           <p className="text-text-muted text-sm">{user.email}</p>
+          <div className="mt-2">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${kycBadge.bg} ${kycBadge.text}`}
+            >
+              <span className="material-symbols-outlined text-sm">
+                {kycBadge.icon}
+              </span>
+              {kycBadge.label}
+            </span>
+          </div>
         </div>
 
         {/* KYC Status Card */}
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-5 mb-6 shadow-soft">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs mb-1">KYC Status</p>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`material-icons text-lg ${
-                    user.kycStatus === "APPROVED"
-                      ? "text-green-400"
-                      : user.kycStatus === "PENDING"
+        {user.kycStatus !== "APPROVED" && (
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-5 mb-6 shadow-soft">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs mb-1">KYC Status</p>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`material-symbols-outlined text-lg ${
+                      user.kycStatus === "PENDING"
                         ? "text-amber-400"
                         : user.kycStatus === "REJECTED"
                           ? "text-red-400"
                           : "text-gray-400"
-                  }`}
-                >
-                  {kycBadge.icon}
-                </span>
-                <span className="text-white font-bold text-sm">
-                  {kycBadge.label}
-                </span>
+                    }`}
+                  >
+                    {kycBadge.icon}
+                  </span>
+                  <span className="text-white font-bold text-sm">
+                    {kycBadge.label}
+                  </span>
+                </div>
               </div>
-            </div>
-            {user.kycStatus === "APPROVED" ? (
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                <span className="material-icons text-green-400 text-xl">
-                  verified
-                </span>
-              </div>
-            ) : (
               <Link
-                href={
-                  user.kycStatus === "PENDING" ? "/kyc/status" : "/kyc"
-                }
-                className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
+                href={user.kycStatus === "PENDING" ? "/kyc/status" : "/kyc"}
+                className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-dark transition-colors"
               >
-                {user.kycStatus === "PENDING"
-                  ? "Check Status"
-                  : "Verify Now"}
+                {user.kycStatus === "PENDING" ? "Check Status" : "Verify Now"}
               </Link>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* DEX Wallet */}
         <WalletConnectButton />
 
-        {/* Settings List */}
-        <div className="bg-card-light dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">
-          {settingsItems.map((item, index) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
-                index < settingsItems.length - 1
-                  ? "border-b border-gray-100 dark:border-gray-800"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                  <span className="material-icons text-primary text-lg">
+        {/* Menu Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-6 mt-6">
+          {menuSections.map((item) => {
+            const content = (
+              <>
+                <div
+                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3`}
+                >
+                  <span className="material-symbols-outlined text-white text-lg">
                     {item.icon}
                   </span>
                 </div>
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
-              <span className="material-icons text-text-muted text-lg">
-                chevron_right
-              </span>
-            </Link>
-          ))}
+                <p className="font-bold text-sm">{item.label}</p>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  {item.description}
+                </p>
+              </>
+            );
+
+            if (!item.href) {
+              return (
+                <div
+                  key={item.label}
+                  className="bg-card-light dark:bg-card-dark rounded-2xl p-4 border border-gray-100 dark:border-gray-800 opacity-60"
+                >
+                  {content}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="bg-card-light dark:bg-card-dark rounded-2xl p-4 border border-gray-100 dark:border-gray-800 hover:shadow-soft transition-all"
+              >
+                {content}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Log Out Button */}
@@ -170,8 +210,9 @@ export default async function ProfilePage() {
         >
           <button
             type="submit"
-            className="w-full py-3.5 border border-red-200 dark:border-red-900/50 text-red-500 text-center font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            className="w-full py-3.5 border border-red-200 dark:border-red-900/50 text-red-500 text-center font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
           >
+            <span className="material-symbols-outlined text-lg">logout</span>
             Log Out
           </button>
         </form>

@@ -1,11 +1,26 @@
+import { NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
+  const { pathname } = req.nextUrl;
+  const isAuthPage = pathname.startsWith("/auth");
   const isPublicPage =
-    req.nextUrl.pathname === "/" ||
-    req.nextUrl.pathname.startsWith("/api/auth");
+    pathname === "/" ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/projects");
+
+  // API routes: return 401 JSON instead of HTML redirect
+  if (
+    pathname.startsWith("/api/") &&
+    !isPublicPage &&
+    !pathname.startsWith("/api/health") &&
+    !pathname.startsWith("/api/kyc/webhook") &&
+    !isLoggedIn
+  ) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   if (isAuthPage && isLoggedIn) {
     return Response.redirect(new URL("/dashboard", req.nextUrl));

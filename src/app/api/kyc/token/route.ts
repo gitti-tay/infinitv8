@@ -25,26 +25,34 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (user.kycStatus === "APPROVED") {
+      return NextResponse.json(
+        { error: "KYC already approved" },
+        { status: 400 }
+      );
+    }
+
     let applicantId = user.kycVerification?.sumsubApplicantId;
 
     if (!applicantId) {
       const applicant = await createApplicant(user.id, user.email);
       applicantId = applicant.id;
 
-      await prisma.kycVerification.upsert({
-        where: { userId: user.id },
-        update: { sumsubApplicantId: applicantId },
-        create: {
-          userId: user.id,
-          sumsubApplicantId: applicantId,
-          status: "PENDING",
-        },
-      });
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { kycStatus: "PENDING" },
-      });
+      await prisma.$transaction([
+        prisma.kycVerification.upsert({
+          where: { userId: user.id },
+          update: { sumsubApplicantId: applicantId },
+          create: {
+            userId: user.id,
+            sumsubApplicantId: applicantId,
+            status: "PENDING",
+          },
+        }),
+        prisma.user.update({
+          where: { id: user.id },
+          data: { kycStatus: "PENDING" },
+        }),
+      ]);
     }
 
     const tokenData = await getAccessToken(user.id);

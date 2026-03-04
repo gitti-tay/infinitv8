@@ -47,11 +47,18 @@ export default async function KycStartPage() {
   return (
     <>
       <Header title="Identity Verification" />
-      <div className="pt-16 pb-24 px-5">
+      <div className="pt-16 pb-24 px-5 animate-fadeIn">
+        {/* Step Badge */}
+        <div className="flex justify-center mt-4 mb-2">
+          <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
+            Step 1 of 3
+          </span>
+        </div>
+
         {/* Verification Icon */}
-        <div className="flex justify-center mt-8 mb-6">
+        <div className="flex justify-center mt-4 mb-6">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            <span className="material-icons text-primary text-4xl">
+            <span className="material-symbols-outlined text-primary text-4xl">
               verified_user
             </span>
           </div>
@@ -74,7 +81,7 @@ export default async function KycStartPage() {
               className="flex items-start gap-4 bg-card-light dark:bg-card-dark rounded-2xl p-4 border border-gray-100 dark:border-gray-800"
             >
               <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                <span className="material-icons text-primary text-lg">
+                <span className="material-symbols-outlined text-primary text-lg">
                   {step.icon}
                 </span>
               </div>
@@ -95,7 +102,7 @@ export default async function KycStartPage() {
 
         {/* Security Notice */}
         <div className="flex items-center gap-3 bg-green-50 dark:bg-green-900/20 rounded-xl p-4 mb-8">
-          <span className="material-icons text-green-600 dark:text-green-400 text-lg">
+          <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-lg">
             lock
           </span>
           <p className="text-xs text-green-700 dark:text-green-300">
@@ -107,7 +114,7 @@ export default async function KycStartPage() {
         {/* Start Button */}
         <Link
           href="/kyc/verify"
-          className="block w-full py-3.5 bg-gradient-to-r from-primary to-secondary text-white text-center font-bold rounded-xl hover:opacity-90 transition-opacity shadow-glow"
+          className="block w-full py-3.5 bg-primary text-white text-center font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-glow"
         >
           Start Verification
         </Link>

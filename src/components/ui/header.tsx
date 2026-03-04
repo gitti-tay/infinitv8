@@ -20,12 +20,14 @@ export function Header({ title, showBack = true, rightAction }: HeaderProps) {
               onClick={() => router.back()}
               className="text-text-muted dark:text-gray-400 hover:text-primary transition-colors"
             >
-              <span className="material-icons">arrow_back</span>
+              <span className="material-symbols-outlined">arrow_back</span>
             </button>
           )}
           <h1 className="font-bold text-lg tracking-tight">{title}</h1>
         </div>
-        {rightAction && <div className="flex items-center gap-4">{rightAction}</div>}
+        {rightAction && (
+          <div className="flex items-center gap-4">{rightAction}</div>
+        )}
       </div>
     </header>
   );

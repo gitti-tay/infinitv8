@@ -18,54 +18,15 @@ interface Project {
   status: string;
 }
 
-function getRiskColor(riskLevel: string): string {
-  switch (riskLevel) {
-    case "LOW":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "MEDIUM":
-      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-    case "HIGH":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-    default:
-      return "bg-gray-100 text-gray-700";
-  }
-}
+const QUICK_AMOUNTS = [500, 1000, 2500, 5000];
 
-function getRiskLabel(riskLevel: string): string {
-  switch (riskLevel) {
-    case "LOW":
-      return "Low Risk";
-    case "MEDIUM":
-      return "Medium Risk";
-    case "HIGH":
-      return "High Risk";
-    default:
-      return riskLevel;
-  }
-}
-
-function getCategoryIcon(category: string): string {
-  switch (category) {
-    case "HEALTHCARE":
-      return "local_hospital";
-    case "AGRICULTURE":
-      return "eco";
-    case "REAL_ESTATE":
-      return "apartment";
-    case "COMMODITIES":
-      return "inventory_2";
-    default:
-      return "category";
-  }
-}
-
-export default function InvestPage() {
+export default function InvestAmountPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [amount, setAmount] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -87,43 +48,22 @@ export default function InvestPage() {
   const numericAmount = parseFloat(amount) || 0;
   const annualReturn = project ? numericAmount * (project.apy / 100) : 0;
   const platformFee = numericAmount * 0.005;
-  const projectedPayout = numericAmount + annualReturn - platformFee;
 
-  async function handleInvest() {
+  function handleContinue() {
     if (!project) return;
     if (numericAmount < project.minInvestment) {
-      setError(`Minimum investment is $${project.minInvestment.toLocaleString("en-US")}`);
+      setError(
+        `Minimum investment is $${project.minInvestment.toLocaleString("en-US")}`
+      );
       return;
     }
-
-    setSubmitting(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/investments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId: project.id,
-          amount: numericAmount,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Investment failed");
-        setSubmitting(false);
-        return;
-      }
-
-      router.push(
-        `/investments/${project.id}/invest/success?amount=${numericAmount}&investmentId=${data.id}`
-      );
-    } catch {
-      setError("Investment failed. Please try again.");
-      setSubmitting(false);
+    if (!agreedToTerms) {
+      setError("Please accept the terms to continue");
+      return;
     }
+    router.push(
+      `/investments/${project.id}/invest/review?amount=${numericAmount}`
+    );
   }
 
   if (loading) {
@@ -150,33 +90,35 @@ export default function InvestPage() {
 
   return (
     <>
-      <Header title="Invest" />
-      <div className="pt-16 pb-28 px-5">
-        {/* Project Info Card */}
-        <div className="mt-4 bg-card-light dark:bg-card-dark rounded-2xl p-4 shadow-soft border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-              <span className="material-icons text-primary text-xl">
-                {getCategoryIcon(project.category)}
-              </span>
+      <Header title="Investment Amount" />
+      <div className="pt-16 pb-28 px-5 animate-fadeIn">
+        {/* Plan Card */}
+        <div className="mt-4 bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-4 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-sm">{project.ticker}</h3>
+            <span className="px-2 py-0.5 text-[10px] font-semibold bg-white/20 rounded-full">
+              {project.term} Mo Term
+            </span>
+          </div>
+          <p className="text-white/70 text-xs mb-3">{project.name}</p>
+          <div className="flex gap-4">
+            <div>
+              <p className="text-white/60 text-[10px]">Target APY</p>
+              <p className="text-lg font-bold">{project.apy}%</p>
             </div>
-            <div className="flex-1">
-              <h2 className="font-bold text-sm">
-                {project.ticker} — {project.name}
-              </h2>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-accent text-xs font-semibold">
-                  {project.apy}% APY
-                </span>
-                <span className="text-text-muted text-xs">
-                  {project.term} Mo
-                </span>
-                <span
-                  className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${getRiskColor(project.riskLevel)}`}
-                >
-                  {getRiskLabel(project.riskLevel)}
-                </span>
-              </div>
+            <div>
+              <p className="text-white/60 text-[10px]">Payout</p>
+              <p className="text-lg font-bold">{project.payout}</p>
+            </div>
+            <div>
+              <p className="text-white/60 text-[10px]">Risk</p>
+              <p className="text-lg font-bold">
+                {project.riskLevel === "LOW"
+                  ? "Low"
+                  : project.riskLevel === "MEDIUM"
+                    ? "Med"
+                    : "High"}
+              </p>
             </div>
           </div>
         </div>
@@ -199,12 +141,31 @@ export default function InvestPage() {
             />
           </div>
           <p className="text-text-muted text-xs mt-2">
-            Min. investment: $
-            {project.minInvestment.toLocaleString("en-US")}
+            Min: ${project.minInvestment.toLocaleString("en-US")}
           </p>
         </div>
 
-        {/* Error Display */}
+        {/* Quick Amount Buttons */}
+        <div className="flex gap-2 mt-4 justify-center">
+          {QUICK_AMOUNTS.map((qa) => (
+            <button
+              key={qa}
+              onClick={() => {
+                setAmount(qa.toString());
+                setError("");
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${
+                numericAmount === qa
+                  ? "bg-primary text-white"
+                  : "bg-card-light dark:bg-card-dark border border-gray-200 dark:border-gray-700 hover:border-primary"
+              }`}
+            >
+              ${qa.toLocaleString()}
+            </button>
+          ))}
+        </div>
+
+        {/* Error */}
         {error && (
           <div className="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3">
             <p className="text-red-600 dark:text-red-400 text-sm text-center">
@@ -213,10 +174,10 @@ export default function InvestPage() {
           </div>
         )}
 
-        {/* Investment Summary */}
+        {/* Projected Returns */}
         {numericAmount > 0 && (
           <div className="mt-6 bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-            <h3 className="font-bold text-sm mb-3">Investment Summary</h3>
+            <h3 className="font-bold text-sm mb-3">Projected Returns</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-text-muted">
@@ -243,10 +204,10 @@ export default function InvestPage() {
                 </span>
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800 pt-3 flex justify-between items-center">
-                <span className="text-sm font-bold">Projected Payout</span>
+                <span className="text-sm font-bold">Net Annual Return</span>
                 <span className="text-sm font-bold text-primary">
                   $
-                  {projectedPayout.toLocaleString("en-US", {
+                  {(annualReturn - platformFee).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -256,41 +217,44 @@ export default function InvestPage() {
           </div>
         )}
 
-        {/* Info Box */}
+        {/* Liquidity Notice */}
         <div className="mt-4 bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20">
           <div className="flex gap-3">
-            <span className="material-icons text-primary text-lg mt-0.5">
+            <span className="material-symbols-outlined text-primary text-lg mt-0.5">
               info
             </span>
-            <div>
-              <p className="text-xs text-text-muted leading-relaxed">
-                Payouts are distributed {project.payout.toLowerCase()} to your
-                wallet. Your investment is locked for the full {project.term}
-                -month term. Early withdrawal may incur penalties.
-              </p>
-            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Your investment is locked for the full {project.term}-month term.
+              Payouts distributed {project.payout.toLowerCase()} to your wallet.
+              Early withdrawal may incur penalties.
+            </p>
           </div>
         </div>
+
+        {/* Terms Checkbox */}
+        <label className="flex items-start gap-3 cursor-pointer mt-4">
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span className="text-xs text-text-muted">
+            I have read and agree to the investment terms, risk disclosure, and
+            understand that returns are not guaranteed.
+          </span>
+        </label>
       </div>
 
       {/* Fixed Bottom CTA */}
       <div className="fixed bottom-16 left-0 right-0 z-40">
         <div className="max-w-md mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
           <button
-            onClick={handleInvest}
-            disabled={submitting || numericAmount <= 0}
-            className="block w-full py-3.5 bg-gradient-to-r from-primary to-secondary text-white text-center font-bold rounded-xl shadow-glow hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleContinue}
+            disabled={numericAmount <= 0}
+            className="block w-full py-3.5 bg-primary text-white text-center font-bold rounded-xl shadow-glow hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin material-icons text-lg">
-                  progress_activity
-                </span>
-                Processing...
-              </span>
-            ) : (
-              "Confirm Investment"
-            )}
+            Continue to Review
           </button>
         </div>
       </div>

@@ -9,9 +9,10 @@ const notifications = [
     iconBg: "bg-green-100 dark:bg-green-900/30",
     iconColor: "text-green-600 dark:text-green-400",
     title: "Monthly Distribution",
-    description: "You received a distribution from PTF - Pacific Timber Fund",
+    description:
+      "You received a distribution from PTF - Pacific Timber Fund",
     amount: "+$550.00",
-    amountColor: "text-green-500",
+    amountColor: "text-accent",
     timestamp: "2 hours ago",
   },
   {
@@ -23,7 +24,7 @@ const notifications = [
     description:
       "Your investment in SCN - Solar Clean Network has been confirmed",
     amount: "$2,500.00",
-    amountColor: "text-text-primary",
+    amountColor: "text-primary",
     timestamp: "1 day ago",
   },
   {
@@ -38,6 +39,18 @@ const notifications = [
     amountColor: null,
     timestamp: "3 days ago",
   },
+  {
+    id: "4",
+    icon: "travel_explore",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+    title: "New Opportunity",
+    description:
+      "Metropolitan District Development is now open for investment at 11.8% APY",
+    amount: null,
+    amountColor: null,
+    timestamp: "5 days ago",
+  },
 ];
 
 export default async function NotificationsPage() {
@@ -49,8 +62,17 @@ export default async function NotificationsPage() {
   return (
     <>
       <Header title="Notifications" showBack={false} />
-      <div className="pt-16 pb-24 px-5">
-        <div className="mt-4 space-y-3">
+      <div className="pt-16 pb-24 px-5 animate-fadeIn">
+        <div className="flex items-center justify-between mt-4 mb-4">
+          <p className="text-sm text-text-muted">
+            {notifications.length} notifications
+          </p>
+          <button className="text-xs font-bold text-primary">
+            Mark all read
+          </button>
+        </div>
+
+        <div className="space-y-3">
           {notifications.map((notification) => (
             <div
               key={notification.id}
@@ -61,7 +83,7 @@ export default async function NotificationsPage() {
                   className={`w-11 h-11 flex-shrink-0 rounded-full ${notification.iconBg} flex items-center justify-center`}
                 >
                   <span
-                    className={`material-icons ${notification.iconColor} text-xl`}
+                    className={`material-symbols-outlined ${notification.iconColor} text-xl`}
                   >
                     {notification.icon}
                   </span>

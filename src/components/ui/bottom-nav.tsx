@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/dashboard", icon: "dashboard", label: "Home" },
+  { href: "/dashboard", icon: "home", label: "Home" },
   { href: "/investments", icon: "travel_explore", label: "Invest" },
   { href: "/portfolio", icon: "pie_chart", label: "Portfolio" },
+  { href: "/wallet", icon: "account_balance_wallet", label: "Wallet" },
   { href: "/profile", icon: "person", label: "Profile" },
 ];
 
@@ -28,7 +29,11 @@ export function BottomNav() {
                   : "text-text-muted dark:text-gray-400 hover:text-primary"
               }`}
             >
-              <span className="material-icons text-2xl mb-1">{item.icon}</span>
+              <span
+                className={`material-symbols-outlined text-2xl mb-1 ${isActive ? "fill-1" : ""}`}
+              >
+                {item.icon}
+              </span>
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           );
