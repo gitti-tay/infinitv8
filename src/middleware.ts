@@ -6,6 +6,8 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
   const isAuthPage = pathname.startsWith("/auth");
+  const isAdminRoute =
+    pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
   const isPublicPage =
     pathname === "/" ||
     pathname.startsWith("/api/auth") ||
@@ -24,6 +26,14 @@ export default auth((req) => {
 
   if (isAuthPage && isLoggedIn) {
     return Response.redirect(new URL("/dashboard", req.nextUrl));
+  }
+
+  // Admin routes: require authentication (role check is in the admin layout)
+  if (isAdminRoute && !isLoggedIn) {
+    if (pathname.startsWith("/api/admin")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return Response.redirect(new URL("/auth/signin", req.nextUrl));
   }
 
   if (!isPublicPage && !isAuthPage && !isLoggedIn) {
