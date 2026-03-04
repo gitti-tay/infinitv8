@@ -7,13 +7,23 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // ── Clean up dependent data first, then projects ──
+  await prisma.adminAuditLog.deleteMany();
+  await prisma.userSettings.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.yieldPayout.deleteMany();
+  await prisma.transaction.deleteMany();
+  await prisma.walletBalance.deleteMany();
+  await prisma.investment.deleteMany();
   await prisma.project.deleteMany();
+  await prisma.user.deleteMany();
 
-  await prisma.project.createMany({
-    data: [
-      {
-        name: "Bloombase Sterile Potato Seed",
-        ticker: "SPPS",
+  // ── Projects (individual creates to capture IDs for first 3) ──
+
+  const projectSPPS = await prisma.project.create({
+    data: {
+      name: "Bloombase Sterile Potato Seed",
+      ticker: "SPPS",
         tagline: "Earn from Thailand's premium organic potato supply chain — 6-month harvest cycles, USDC payouts.",
         description: "Blockchain-powered agricultural investment in premium organic potato farming across 500 rai in Chiang Mai highlands. Smart contracts automate yield distribution from harvest revenues directly to token holders. Current yield: 3,200 tons/year supplying major Thai retail chains and export markets. Fully transparent supply chain tracked on-chain with IoT soil monitoring. Certified organic by USDA and Thailand's ACT.",
         investmentThesis: "Thailand's organic produce market is growing at 18% CAGR, driven by health-conscious consumers and export demand from Japan and South Korea. Bloombase operates 500 rai of certified organic potato fields in Chiang Mai's fertile highlands, producing 3,200 tons annually. The Seed Cycle Note (SCN) structure lets investors participate in 6-month harvest cycles with revenue distributed in USDC after each cycle.\n\nKey advantages: (1) Established buyer contracts with CP ALL, Tops, and Villa Market guarantee 85% of output at pre-agreed prices; (2) IoT soil monitoring and blockchain traceability command a 40% price premium over conventional potatoes; (3) Government BOI incentives provide 8-year corporate tax exemption.",
@@ -88,10 +98,13 @@ async function main() {
           { name: "Retail", apy: 12.0, min: 500, term: 19, lockup: "6 months", payout: "Semi-Annual", badge: "Popular", description: "Standard access to harvest cycle returns" },
           { name: "Pro Investor", apy: 13.5, min: 10000, term: 19, lockup: "6 months", payout: "Semi-Annual", badge: "Pro", description: "Priority redemption + enhanced yield from reserve allocation" },
         ],
-      },
-      {
-        name: "re:H Medical Device Distribution",
-        ticker: "MDD",
+    },
+  });
+
+  const projectMDD = await prisma.project.create({
+    data: {
+      name: "re:H Medical Device Distribution",
+      ticker: "MDD",
         tagline: "Milestone-gated healthcare investment — earn as Southeast Asia's medical supply chain scales.",
         description: "Southeast Asia's fastest-growing pharmaceutical and medical equipment distribution network. Serving 340+ hospitals and 1,200+ clinics across Thailand, Vietnam, and Cambodia. Exclusive distribution agreements with 8 global medical device manufacturers. Annual revenue of $12M with 22% net margins. ISO 13485 certified with cold-chain logistics infrastructure.",
         investmentThesis: "Southeast Asia's medical device market is projected to reach $18B by 2028, growing at 8.4% CAGR. re:H has built exclusive distribution partnerships with 8 global manufacturers including Medtronic, Olympus, and Karl Storz, serving 340+ hospitals across Thailand, Vietnam, and Cambodia.\n\nThe Milestone-Gated Revenue Share Note (MRSN) structure protects investors by releasing capital in tranches tied to verifiable distribution milestones. Revenue is generated from wholesale margins (22% net) on medical equipment and consumables, providing predictable cash flows backed by long-term hospital contracts.\n\nKey moat: Cold-chain logistics infrastructure across 3 countries — a $50M+ barrier to entry for competitors.",
@@ -166,10 +179,13 @@ async function main() {
           { name: "Retail", apy: 11.8, min: 1000, term: 24, lockup: "12 months", payout: "Quarterly", badge: "Popular", description: "Standard access with milestone-gated capital protection" },
           { name: "Pro Investor", apy: 13.2, min: 25000, term: 24, lockup: "12 months", payout: "Quarterly", badge: "Pro", description: "Priority allocation + enhanced yield from working capital returns" },
         ],
-      },
-      {
-        name: "K-Beauty Clinic Bangkok",
-        ticker: "KBB",
+    },
+  });
+
+  const projectKBB = await prisma.project.create({
+    data: {
+      name: "K-Beauty Clinic Bangkok",
+      ticker: "KBB",
         tagline: "Premium Korean beauty clinic in Sukhumvit — monthly cashflow from Asia's booming aesthetics market.",
         description: "State-of-the-art Korean beauty and aesthetic medicine clinic in Bangkok's premium Sukhumvit district. Offering advanced Korean dermatology, cosmetic procedures, and anti-aging treatments. Treated 4,800+ international patients with a 96% satisfaction rate. Revenue has grown 42% YoY driven by Southeast Asia's $7.2B medical aesthetics market.",
         investmentThesis: "The medical aesthetics market in Southeast Asia is growing at 15% CAGR, with Bangkok emerging as the regional hub for Korean-standard beauty treatments. K-Beauty Clinic Bangkok operates a premium 800 sqm facility in Sukhumvit Soi 39, staffed by board-certified Korean dermatologists and surgeons.\n\nThe Clinic Cashflow Preferred (CCP) structure provides monthly distributions from operating revenue, offering investors steady income backed by strong patient demand. With 4,800+ patients served and a 96% satisfaction rate, the clinic has achieved $8.2M annual revenue with 35% operating margins.\n\nGrowth drivers: Rising medical tourism (2M+ visitors to Thailand annually for medical procedures), exclusive Korean technology partnerships, and premium pricing power from Korean-board-certified specialists.",
@@ -245,7 +261,12 @@ async function main() {
           { name: "Standard 18-Month", apy: 14.5, min: 750, term: 18, lockup: "6 months", payout: "Monthly", badge: "Popular", description: "Full-term access to clinic cashflow returns" },
           { name: "Pro Investor", apy: 16.0, min: 15000, term: 18, lockup: "6 months", payout: "Monthly", badge: "Pro", description: "Enhanced yield with priority allocation" },
         ],
-      },
+    },
+  });
+
+  // Remaining projects (no ID capture needed)
+  await prisma.project.createMany({
+    data: [
       {
         name: "Zero-Emission Waste Recycle Plant",
         ticker: "WRP",
@@ -409,7 +430,297 @@ async function main() {
     ],
   });
 
-  console.log("Seed data created successfully — 5 institutional-grade projects");
+  console.log("Seeded: 5 institutional-grade projects (SPPS, MDD, KBB, WRP, REI)");
+
+  // ── Demo User ──
+  const demoUser = await prisma.user.upsert({
+    where: { email: "demo@infinitv8.com" },
+    update: {},
+    create: {
+      email: "demo@infinitv8.com",
+      name: "Jun Kang",
+      passwordHash: "$2b$12$demo.hash.placeholder",
+      kycStatus: "APPROVED",
+      role: "INVESTOR",
+      walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+    },
+  });
+
+  // ── Admin User ──
+  const adminUser = await prisma.user.upsert({
+    where: { email: "admin@infinitv8.com" },
+    update: {},
+    create: {
+      email: "admin@infinitv8.com",
+      name: "Admin",
+      passwordHash: "$2b$12$admin.hash.placeholder",
+      kycStatus: "APPROVED",
+      role: "ADMIN",
+    },
+  });
+
+  console.log("Seeded: demo user (demo@infinitv8.com) + admin user");
+
+  // ── Investments (demoUser -> first 3 projects) ──
+  const investmentSPPS = await prisma.investment.create({
+    data: {
+      userId: demoUser.id,
+      projectId: projectSPPS.id,
+      amount: 15000,
+      status: "CONFIRMED",
+    },
+  });
+
+  const investmentMDD = await prisma.investment.create({
+    data: {
+      userId: demoUser.id,
+      projectId: projectMDD.id,
+      amount: 12000,
+      status: "CONFIRMED",
+    },
+  });
+
+  const investmentKBB = await prisma.investment.create({
+    data: {
+      userId: demoUser.id,
+      projectId: projectKBB.id,
+      amount: 8000,
+      status: "CONFIRMED",
+    },
+  });
+
+  console.log("Seeded: 3 investments ($15k SPPS, $12k MDD, $8k KBB)");
+
+  // ── Wallet Balances ──
+  await prisma.walletBalance.createMany({
+    data: [
+      { userId: demoUser.id, asset: "USDT", network: "ERC20", balance: 5240, available: 5240 },
+      { userId: demoUser.id, asset: "USDC", network: "ERC20", balance: 2300, available: 2300 },
+      { userId: demoUser.id, asset: "ETH", network: "ERC20", balance: 0, available: 0 },
+    ],
+  });
+
+  console.log("Seeded: 3 wallet balances (USDT, USDC, ETH)");
+
+  // ── Transactions ──
+  await prisma.transaction.createMany({
+    data: [
+      {
+        userId: demoUser.id,
+        type: "DEPOSIT",
+        asset: "USDT",
+        amount: 10000,
+        status: "COMPLETED",
+        description: "Deposit USDT",
+        createdAt: new Date("2026-02-08"),
+      },
+      {
+        userId: demoUser.id,
+        type: "INVESTMENT",
+        asset: "SPPS",
+        amount: -15000,
+        status: "COMPLETED",
+        projectId: projectSPPS.id,
+        description: "Investment in Bloombase Sterile Potato Seed",
+        createdAt: new Date("2026-02-09"),
+      },
+      {
+        userId: demoUser.id,
+        type: "INVESTMENT",
+        asset: "MDD",
+        amount: -12000,
+        status: "COMPLETED",
+        projectId: projectMDD.id,
+        description: "Investment in re:H Medical Device Distribution",
+        createdAt: new Date("2026-02-10"),
+      },
+      {
+        userId: demoUser.id,
+        type: "INVESTMENT",
+        asset: "KBB",
+        amount: -8000,
+        status: "COMPLETED",
+        projectId: projectKBB.id,
+        description: "Investment in K-Beauty Clinic Bangkok",
+        createdAt: new Date("2026-02-10"),
+      },
+      {
+        userId: demoUser.id,
+        type: "YIELD",
+        asset: "SPPS",
+        amount: 125.50,
+        status: "COMPLETED",
+        projectId: projectSPPS.id,
+        description: "Yield payout from SPPS",
+        createdAt: new Date("2026-02-15"),
+      },
+      {
+        userId: demoUser.id,
+        type: "YIELD",
+        asset: "MDD",
+        amount: 89.20,
+        status: "COMPLETED",
+        projectId: projectMDD.id,
+        description: "Yield payout from MDD",
+        createdAt: new Date("2026-02-20"),
+      },
+      {
+        userId: demoUser.id,
+        type: "WITHDRAWAL",
+        asset: "USDC",
+        amount: -2000,
+        status: "COMPLETED",
+        description: "Withdrawal USDC",
+        createdAt: new Date("2026-01-15"),
+      },
+      {
+        userId: demoUser.id,
+        type: "DEPOSIT",
+        asset: "USDC",
+        amount: 5000,
+        status: "COMPLETED",
+        description: "Deposit USDC",
+        createdAt: new Date("2026-02-25"),
+      },
+    ],
+  });
+
+  console.log("Seeded: 8 transactions (deposits, investments, yields, withdrawal)");
+
+  // ── Yield Payouts ──
+  await prisma.yieldPayout.createMany({
+    data: [
+      // 3 past (paid)
+      {
+        userId: demoUser.id,
+        projectId: projectSPPS.id,
+        investmentId: investmentSPPS.id,
+        amount: 125.50,
+        payoutDate: new Date("2026-02-15"),
+        paid: true,
+        paidAt: new Date("2026-02-15"),
+      },
+      {
+        userId: demoUser.id,
+        projectId: projectMDD.id,
+        investmentId: investmentMDD.id,
+        amount: 89.20,
+        payoutDate: new Date("2026-02-20"),
+        paid: true,
+        paidAt: new Date("2026-02-20"),
+      },
+      {
+        userId: demoUser.id,
+        projectId: projectKBB.id,
+        investmentId: investmentKBB.id,
+        amount: 64.80,
+        payoutDate: new Date("2026-02-25"),
+        paid: true,
+        paidAt: new Date("2026-02-25"),
+      },
+      // 3 upcoming (unpaid)
+      {
+        userId: demoUser.id,
+        projectId: projectSPPS.id,
+        investmentId: investmentSPPS.id,
+        amount: 125.50,
+        payoutDate: new Date("2026-03-15"),
+        paid: false,
+      },
+      {
+        userId: demoUser.id,
+        projectId: projectMDD.id,
+        investmentId: investmentMDD.id,
+        amount: 89.20,
+        payoutDate: new Date("2026-03-20"),
+        paid: false,
+      },
+      {
+        userId: demoUser.id,
+        projectId: projectKBB.id,
+        investmentId: investmentKBB.id,
+        amount: 64.80,
+        payoutDate: new Date("2026-03-25"),
+        paid: false,
+      },
+    ],
+  });
+
+  console.log("Seeded: 6 yield payouts (3 paid, 3 upcoming)");
+
+  // ── Notifications ──
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: demoUser.id,
+        type: "YIELD_RECEIVED",
+        title: "Yield Received — SPPS",
+        message: "$125.50 yield distributed",
+        read: true,
+        createdAt: new Date("2026-02-15"),
+      },
+      {
+        userId: demoUser.id,
+        type: "INVESTMENT_CONFIRMED",
+        title: "Investment Confirmed — KBB",
+        message: "$8,000 investment in K-Beauty Clinic",
+        read: true,
+        createdAt: new Date("2026-02-10"),
+      },
+      {
+        userId: demoUser.id,
+        type: "PAYOUT_SCHEDULED",
+        title: "Upcoming Payout — SPPS",
+        message: "Payout of $125.50 scheduled for Mar 15",
+        read: false,
+        createdAt: new Date("2026-03-10"),
+      },
+      {
+        userId: demoUser.id,
+        type: "KYC_UPDATE",
+        title: "Identity Verified",
+        message: "Your KYC verification has been approved",
+        read: true,
+        createdAt: new Date("2026-02-05"),
+      },
+      {
+        userId: demoUser.id,
+        type: "SYSTEM",
+        title: "Welcome to INFINITV8",
+        message: "Start exploring institutional-grade RWA investments",
+        read: true,
+        createdAt: new Date("2026-02-01"),
+      },
+    ],
+  });
+
+  console.log("Seeded: 5 notifications");
+
+  // ── User Settings ──
+  await prisma.userSettings.create({
+    data: {
+      userId: demoUser.id,
+      biometricAuth: true,
+      withdrawalWhitelist: true,
+      emailConfirmWithdraw: true,
+      theme: "dark",
+    },
+  });
+
+  console.log("Seeded: user settings for demo user");
+
+  // ── Admin Audit Log ──
+  await prisma.adminAuditLog.create({
+    data: {
+      adminId: adminUser.id,
+      action: "user.kyc.approve",
+      target: demoUser.id,
+      details: { reason: "KYC documents verified", approvedBy: "admin@infinitv8.com" },
+    },
+  });
+
+  console.log("Seeded: 1 admin audit log entry");
+  console.log("Seed completed successfully!");
 }
 
 main()
