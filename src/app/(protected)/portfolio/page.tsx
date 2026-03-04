@@ -1,27 +1,67 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/ui/header";
-import { getCategoryIcon, formatCurrency } from "@/lib/utils/format";
+import {
+  getCategoryIcon,
+  getCategoryLabel,
+  formatCurrency,
+  getRiskColor,
+} from "@/lib/utils/format";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                           */
+/* ------------------------------------------------------------------ */
+
+function getCategoryColor(category: string): string {
+  switch (category) {
+    case "HEALTHCARE":
+      return "#3b82f6";
+    case "AGRICULTURE":
+      return "#10b981";
+    case "REAL_ESTATE":
+      return "#8b5cf6";
+    case "COMMODITIES":
+      return "#f59e0b";
+    default:
+      return "#3b82f6";
+  }
+}
+
+function getCategoryBgClass(category: string): string {
+  switch (category) {
+    case "HEALTHCARE":
+      return "bg-primary/10 text-primary";
+    case "AGRICULTURE":
+      return "bg-accent/10 text-accent";
+    case "REAL_ESTATE":
+      return "bg-purple/10 text-purple";
+    case "COMMODITIES":
+      return "bg-amber/10 text-amber";
+    default:
+      return "bg-primary/10 text-primary";
+  }
+}
 
 function getStatusBadge(status: string) {
   switch (status) {
     case "CONFIRMED":
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent-light rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
           Active
         </span>
       );
     case "PENDING":
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-amber/10 text-amber rounded-full">
           Pending
         </span>
       );
     case "CANCELLED":
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-background-tertiary text-text-muted rounded-full">
           Cancelled
         </span>
       );
@@ -30,20 +70,105 @@ function getStatusBadge(status: string) {
   }
 }
 
-function getColorGradient(category: string): string {
-  switch (category) {
-    case "HEALTHCARE":
-      return "from-blue-500 to-blue-600";
-    case "AGRICULTURE":
-      return "from-emerald-500 to-emerald-600";
-    case "REAL_ESTATE":
-      return "from-violet-500 to-violet-600";
-    case "COMMODITIES":
-      return "from-amber-500 to-amber-600";
-    default:
-      return "from-primary to-primary-dark";
-  }
+/** Calculate maturity progress as a percentage (0-100) */
+function getMaturityProgress(investedAt: Date, termMonths: number): number {
+  const now = new Date();
+  const maturityDate = new Date(investedAt);
+  maturityDate.setMonth(maturityDate.getMonth() + termMonths);
+  const totalMs = maturityDate.getTime() - investedAt.getTime();
+  const elapsedMs = now.getTime() - investedAt.getTime();
+  if (totalMs <= 0) return 100;
+  return Math.min(100, Math.max(0, Math.round((elapsedMs / totalMs) * 100)));
 }
+
+/** Format a date to readable string */
+function fmtDate(d: Date): string {
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sample payout history (hardcoded for now)                         */
+/* ------------------------------------------------------------------ */
+
+const SAMPLE_PAYOUTS = [
+  { date: "Feb 15, 2026", asset: "SCN", category: "HEALTHCARE", amount: 125.5, status: "Completed" },
+  { date: "Feb 10, 2026", asset: "MDD", category: "REAL_ESTATE", amount: 64.8, status: "Completed" },
+  { date: "Jan 20, 2026", asset: "PTF", category: "AGRICULTURE", amount: 89.2, status: "Completed" },
+  { date: "Jan 15, 2026", asset: "SCN", category: "HEALTHCARE", amount: 125.5, status: "Completed" },
+  { date: "Jan 10, 2026", asset: "MDD", category: "REAL_ESTATE", amount: 64.8, status: "Completed" },
+  { date: "Dec 20, 2025", asset: "PTF", category: "AGRICULTURE", amount: 89.2, status: "Completed" },
+  { date: "Dec 15, 2025", asset: "SCN", category: "HEALTHCARE", amount: 125.5, status: "Completed" },
+  { date: "Dec 10, 2025", asset: "MDD", category: "REAL_ESTATE", amount: 64.8, status: "Completed" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Donut Chart (SVG, server-renderable)                              */
+/* ------------------------------------------------------------------ */
+
+function DonutChart({
+  segments,
+  centerLabel,
+  centerValue,
+}: {
+  segments: { value: number; color: string }[];
+  centerLabel: string;
+  centerValue: string;
+}) {
+  const total = segments.reduce((s, seg) => s + seg.value, 0);
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <div className="relative w-[160px] h-[160px] lg:w-[180px] lg:h-[180px] shrink-0">
+      <svg viewBox="0 0 180 180" className="w-full h-full -rotate-90">
+        <circle
+          cx="90"
+          cy="90"
+          r={radius}
+          fill="none"
+          className="stroke-background-tertiary"
+          strokeWidth="20"
+        />
+        {segments.map((seg, i) => {
+          const dashLen = total > 0 ? (seg.value / total) * circumference : 0;
+          const dashOffset = -offset;
+          offset += dashLen;
+          return (
+            <circle
+              key={i}
+              cx="90"
+              cy="90"
+              r={radius}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth="20"
+              strokeDasharray={`${dashLen} ${circumference - dashLen}`}
+              strokeDashoffset={dashOffset}
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[10px] text-text-muted uppercase tracking-widest">
+          {centerLabel}
+        </span>
+        <span className="text-2xl font-extrabold text-text-primary">
+          {centerValue}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  Page Component                                                    */
+/* ================================================================== */
 
 export default async function PortfolioPage() {
   const session = await auth();
@@ -57,327 +182,411 @@ export default async function PortfolioPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const confirmedInvestments = investments.filter(
-    (inv) => inv.status === "CONFIRMED"
-  );
-  const totalInvested = confirmedInvestments.reduce(
+  /* ---- Derived data ---- */
+  const confirmed = investments.filter((inv) => inv.status === "CONFIRMED");
+  const totalInvested = confirmed.reduce(
     (sum, inv) => sum + Number(inv.amount),
     0
   );
-  const estimatedReturn = confirmedInvestments.reduce(
+  const totalYield = confirmed.reduce(
     (sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100),
     0
   );
-  const totalValue = totalInvested + estimatedReturn;
+  const monthlyYield = totalYield / 12;
+  const totalValue = totalInvested + totalYield;
+  const gainPct =
+    totalInvested > 0 ? ((totalYield / totalInvested) * 100).toFixed(1) : "0";
+  const avgApy =
+    confirmed.length > 0
+      ? (
+          confirmed.reduce((s, inv) => s + Number(inv.project.apy), 0) /
+          confirmed.length
+        ).toFixed(1)
+      : "0";
+
+  /* Donut segments */
+  const donutSegments = confirmed.map((inv) => ({
+    value: Number(inv.amount),
+    color: getCategoryColor(inv.project.category),
+  }));
 
   return (
     <>
       <Header title="Portfolio" showBack={false} />
       <div className="pt-14 pb-24 md:pb-8 animate-fadeIn">
-        {/* Total Value Card - Premium Design */}
-        <div className="px-5 pt-4">
-          <div className="relative bg-gradient-to-br from-primary via-primary-dark to-secondary rounded-3xl p-6 text-white shadow-glow overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24" />
-
-            <div className="relative">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-white/80">
-                  account_balance_wallet
-                </span>
-                <p className="text-white/80 text-sm font-medium">
-                  Total Portfolio Value
+        <div className="px-4 md:px-6 pt-4 space-y-6">
+          {/* ====================================================== */}
+          {/*  1. Portfolio Hero Card                                 */}
+          {/* ====================================================== */}
+          <div className="bg-gradient-to-br from-primary/[0.08] to-purple/[0.06] border border-primary/15 rounded-xl p-6 md:p-8 shadow-soft">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+              {/* Left: value + metrics */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-text-muted uppercase tracking-widest mb-1">
+                  Portfolio Value
                 </p>
-              </div>
-              <h2 className="text-4xl font-bold mb-2">
-                ${formatCurrency(totalValue)}
-              </h2>
-              {estimatedReturn > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full backdrop-blur-sm">
-                    <span className="material-symbols-outlined text-sm">
+                <h2 className="text-4xl md:text-[44px] font-black tracking-tight font-mono text-text-primary leading-none mb-2">
+                  ${formatCurrency(totalValue)}
+                </h2>
+
+                {totalYield > 0 && (
+                  <div className="flex items-center gap-2 text-accent-light font-semibold text-base">
+                    <span className="material-symbols-outlined text-lg">
                       trending_up
                     </span>
-                    <span className="text-sm font-bold">
-                      +${formatCurrency(estimatedReturn)}
+                    <span>
+                      +${formatCurrency(totalYield)} (+{gainPct}%)
+                    </span>
+                    <span className="text-xs text-text-muted font-normal">
+                      all time
                     </span>
                   </div>
-                  <span className="text-emerald-300 font-bold">
-                    +
-                    {totalInvested > 0
-                      ? ((estimatedReturn / totalInvested) * 100).toFixed(1)
-                      : "0"}
-                    %
-                  </span>
-                </div>
-              )}
+                )}
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-3 mt-5 mb-5">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-                  <p className="text-white/60 text-[10px] uppercase mb-1 tracking-wide">
-                    Invested
-                  </p>
-                  <p className="text-lg font-bold">
-                    ${formatCurrency(totalInvested, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
-                  </p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-                  <p className="text-white/60 text-[10px] uppercase mb-1 tracking-wide">
-                    Returns
-                  </p>
-                  <p className="text-lg font-bold text-emerald-300">
-                    +${formatCurrency(estimatedReturn, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
-                  </p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-                  <p className="text-white/60 text-[10px] uppercase mb-1 tracking-wide">
-                    Assets
-                  </p>
-                  <p className="text-lg font-bold">
-                    {confirmedInvestments.length}
-                  </p>
+                {/* Metrics grid */}
+                <div className="flex flex-wrap gap-x-10 gap-y-3 mt-5">
+                  <div>
+                    <p className="text-xl font-bold font-mono text-text-primary">
+                      ${formatCurrency(totalInvested, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      Total Invested
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold font-mono text-accent-light">
+                      ${formatCurrency(totalYield)}
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      Total Yield
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold font-mono text-primary-light">
+                      ${formatCurrency(monthlyYield)}
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      Monthly Yield
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold font-mono text-amber">
+                      {avgApy}%
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">Avg. APY</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
+              {/* Right: donut chart */}
+              {confirmed.length > 0 && (
+                <DonutChart
+                  segments={donutSegments}
+                  centerLabel="Assets"
+                  centerValue={String(confirmed.length)}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* ====================================================== */}
+          {/*  2. Active Investments                                  */}
+          {/* ====================================================== */}
+          <div>
+            <h3 className="text-lg font-bold text-text-primary mb-4">
+              Active Investments ({confirmed.length})
+            </h3>
+
+            {investments.length === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-6 shadow-soft text-center py-16">
+                <span className="material-symbols-outlined text-4xl text-text-muted mb-3 block">
+                  account_balance_wallet
+                </span>
+                <p className="text-text-muted text-sm mb-1">
+                  No investments yet
+                </p>
+                <p className="text-text-muted text-xs mb-5">
+                  Start building your portfolio today
+                </p>
                 <Link
                   href="/investments"
-                  className="flex-1 bg-white text-primary py-3 rounded-xl font-bold text-center text-sm"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors"
                 >
-                  Invest More
-                </Link>
-                <Link
-                  href="/transactions"
-                  className="flex-1 bg-white/20 border border-white/30 backdrop-blur-sm py-3 rounded-xl font-bold text-center text-sm"
-                >
-                  Transactions
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  Browse Projects
                 </Link>
               </div>
-            </div>
-          </div>
-        </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {investments.map((investment) => {
+                  const amount = Number(investment.amount);
+                  const apy = Number(investment.project.apy);
+                  const estYield = amount * (apy / 100);
+                  const currentValue = amount + estYield;
+                  const gainPercent =
+                    amount > 0
+                      ? ((estYield / amount) * 100).toFixed(1)
+                      : "0";
+                  const totalGain = estYield;
+                  const maturityPct = getMaturityProgress(
+                    investment.createdAt,
+                    investment.project.term
+                  );
+                  const catColor = getCategoryColor(
+                    investment.project.category
+                  );
+                  const catBgClass = getCategoryBgClass(
+                    investment.project.category
+                  );
+                  const catLabel = getCategoryLabel(
+                    investment.project.category
+                  );
 
-        {/* My Assets */}
-        <div className="px-5 mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h3 className="font-bold text-lg">My Assets</h3>
-              <p className="text-xs text-text-muted">
-                {confirmedInvestments.length} active investment
-                {confirmedInvestments.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-          </div>
+                  // Calculate next payout: one month from most recent month boundary
+                  const nextPayout = new Date(investment.createdAt);
+                  const now = new Date();
+                  while (nextPayout < now) {
+                    nextPayout.setMonth(nextPayout.getMonth() + 1);
+                  }
+                  const monthlyPayout = (amount * (apy / 100)) / 12;
 
-          {investments.length === 0 ? (
-            <div className="text-center py-12 bg-card-light dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800">
-              <span className="material-symbols-outlined text-4xl text-text-muted mb-2">
-                account_balance_wallet
-              </span>
-              <p className="text-text-muted text-sm mb-1">
-                No investments yet
-              </p>
-              <p className="text-text-muted text-xs mb-4">
-                Start building your portfolio today
-              </p>
-              <Link
-                href="/investments"
-                className="inline-block px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors"
-              >
-                Browse Projects
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-              {investments.map((investment) => {
-                const estReturn =
-                  Number(investment.amount) *
-                  (Number(investment.project.apy) / 100);
-                const currentValue =
-                  Number(investment.amount) + estReturn;
-                const performance =
-                  Number(investment.amount) > 0
-                    ? (estReturn / Number(investment.amount)) * 100
-                    : 0;
-                const gradient = getColorGradient(
-                  investment.project.category
-                );
+                  // Maturity date
+                  const maturityDate = new Date(investment.createdAt);
+                  maturityDate.setMonth(
+                    maturityDate.getMonth() + investment.project.term
+                  );
 
-                return (
-                  <Link
-                    key={investment.id}
-                    href={`/portfolio/${investment.id}`}
-                    className="block bg-card-light dark:bg-card-dark rounded-2xl overflow-hidden shadow-soft border border-gray-100 dark:border-gray-800"
-                  >
-                    {/* Gradient Header */}
+                  return (
                     <div
-                      className={`bg-gradient-to-r ${gradient} p-4 text-white`}
+                      key={investment.id}
+                      className="bg-card border border-border rounded-xl overflow-hidden shadow-soft hover:border-border-light transition-colors"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                            <span className="material-symbols-outlined text-2xl">
-                              {getCategoryIcon(investment.project.category)}
+                      {/* Card header */}
+                      <div className="flex items-center gap-3 p-5 border-b border-border">
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${catBgClass}`}
+                        >
+                          <span className="material-symbols-outlined text-xl">
+                            {getCategoryIcon(investment.project.category)}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-text-primary text-sm truncate">
+                              {investment.project.name}
+                            </span>
+                            <span className="text-[11px] font-semibold text-primary-light bg-primary/10 px-1.5 py-0.5 rounded">
+                              {investment.project.ticker}
+                            </span>
+                            <span className="text-[11px] text-text-muted">
+                              {catLabel}
                             </span>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-base mb-0.5">
-                              {investment.project.ticker}
-                            </h4>
-                            <p className="text-xs text-white/80">
-                              {investment.project.category
-                                .replace("_", " ")
-                                .toLowerCase()
-                                .replace(/\b\w/g, (l: string) =>
-                                  l.toUpperCase()
-                                )}
+                          <p className="text-[11px] text-text-muted mt-0.5 truncate">
+                            Maturity: {fmtDate(maturityDate)}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xl font-extrabold font-mono text-text-primary">
+                            ${formatCurrency(currentValue)}
+                          </p>
+                          <p className="text-xs font-semibold text-accent-light">
+                            +{gainPercent}% ($
+                            {formatCurrency(totalGain)})
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Card body */}
+                      <div className="p-5">
+                        {/* Metrics grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="text-center p-3 bg-background-tertiary rounded-lg">
+                            <p className="text-sm font-bold font-mono text-text-primary">
+                              ${formatCurrency(amount, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
+                            </p>
+                            <p className="text-[11px] text-text-muted mt-0.5">
+                              Invested
+                            </p>
+                          </div>
+                          <div className="text-center p-3 bg-background-tertiary rounded-lg">
+                            <p className="text-sm font-bold font-mono text-accent-light">
+                              {apy}%
+                            </p>
+                            <p className="text-[11px] text-text-muted mt-0.5">
+                              APY
+                            </p>
+                          </div>
+                          <div className="text-center p-3 bg-background-tertiary rounded-lg">
+                            <p className="text-sm font-bold font-mono text-accent-light">
+                              ${formatCurrency(estYield)}
+                            </p>
+                            <p className="text-[11px] text-text-muted mt-0.5">
+                              Yield Earned
+                            </p>
+                          </div>
+                          <div className="text-center p-3 bg-background-tertiary rounded-lg">
+                            <p className="text-sm font-bold font-mono text-primary-light">
+                              +${formatCurrency(estYield)}
+                            </p>
+                            <p className="text-[11px] text-text-muted mt-0.5">
+                              Unrealized Gain
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-white/80 mb-0.5">
-                            Current Value
-                          </p>
-                          <p className="font-bold text-xl">
-                            ${formatCurrency(currentValue, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
-                          </p>
+
+                        {/* Progress to maturity */}
+                        <div className="mt-4">
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span className="text-text-muted">
+                              Progress to Maturity
+                            </span>
+                            <span className="font-semibold text-text-primary">
+                              {maturityPct}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-700"
+                              style={{ width: `${maturityPct}%` }}
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full backdrop-blur-sm">
-                          <span className="material-symbols-outlined text-xs">
-                            trending_up
+                      {/* Card footer */}
+                      <div className="flex items-center justify-between px-5 py-3 bg-background-tertiary border-t border-border">
+                        <div className="flex items-center gap-4 text-xs">
+                          <span className="text-text-muted">
+                            Next:{" "}
+                            <span className="text-accent-light font-bold font-mono">
+                              ${formatCurrency(monthlyPayout)}
+                            </span>{" "}
+                            on {fmtDate(nextPayout)}
                           </span>
-                          <span className="text-xs font-bold">
-                            +{performance.toFixed(1)}%
-                          </span>
+                          {getStatusBadge(investment.status)}
                         </div>
-                        <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full backdrop-blur-sm">
-                          <span className="material-symbols-outlined text-xs">
-                            location_on
-                          </span>
-                          <span className="text-xs font-medium">
-                            {investment.project.location}
-                          </span>
-                        </div>
+                        <Link
+                          href={`/portfolio/${investment.id}`}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold text-white rounded-md transition-colors"
+                          style={{ backgroundColor: catColor }}
+                        >
+                          View Details
+                        </Link>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-                    {/* Details */}
-                    <div className="p-4">
-                      <div className="grid grid-cols-4 gap-3 mb-3">
-                        <div>
-                          <p className="text-[10px] text-text-muted uppercase mb-1">
-                            Invested
-                          </p>
-                          <p className="text-sm font-bold">
-                            $
-                            {formatCurrency(Number(investment.amount), {
-                              maximumFractionDigits: 0,
-                              minimumFractionDigits: 0,
-                            })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-text-muted uppercase mb-1">
-                            APY
-                          </p>
-                          <p className="text-sm font-bold text-accent">
-                            {Number(investment.project.apy)}%
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-text-muted uppercase mb-1">
-                            Returns
-                          </p>
-                          <p className="text-sm font-bold text-primary">
-                            +$
-                            {formatCurrency(estReturn, {
-                              maximumFractionDigits: 0,
-                              minimumFractionDigits: 0,
-                            })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-text-muted uppercase mb-1">
-                            Term
-                          </p>
-                          <p className="text-sm font-bold">
-                            {investment.project.term} Mo
-                          </p>
-                        </div>
+          {/* ====================================================== */}
+          {/*  3. Payout History + 4. Yield Analytics                  */}
+          {/* ====================================================== */}
+          {confirmed.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Payout History */}
+              <div className="bg-card border border-border rounded-xl p-6 shadow-soft">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-base font-bold text-text-primary">
+                    Payout History
+                  </h4>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent-light rounded-full">
+                    {SAMPLE_PAYOUTS.length} total payouts
+                  </span>
+                </div>
+                <div className="divide-y divide-border">
+                  {SAMPLE_PAYOUTS.map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{
+                          backgroundColor: getCategoryColor(p.category),
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-text-primary">
+                          {p.asset} Yield Payout
+                        </p>
+                        <p className="text-[11px] text-text-muted">
+                          {p.date}
+                        </p>
                       </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
-                        {getStatusBadge(investment.status)}
-                        <span className="material-symbols-outlined text-text-muted">
-                          arrow_forward
-                        </span>
-                      </div>
+                      <span className="text-sm font-bold font-mono text-accent-light">
+                        +${p.amount.toFixed(2)}
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent-light rounded-full">
+                        {p.status}
+                      </span>
                     </div>
-                  </Link>
-                );
-              })}
+                  ))}
+                </div>
+              </div>
+
+              {/* Yield Analytics */}
+              <div className="bg-card border border-border rounded-xl p-6 shadow-soft">
+                <h4 className="text-base font-bold text-text-primary mb-4">
+                  Yield Analytics
+                </h4>
+                <div className="flex flex-col gap-3">
+                  {[
+                    {
+                      label: "Total Yield Earned",
+                      value: `$${formatCurrency(totalYield)}`,
+                      color: "text-accent-light",
+                    },
+                    {
+                      label: "Average Monthly Yield",
+                      value: `$${formatCurrency(monthlyYield)}`,
+                      color: "text-text-primary",
+                    },
+                    {
+                      label: "Yield on Cost",
+                      value:
+                        totalInvested > 0
+                          ? `${((totalYield / totalInvested) * 100).toFixed(2)}%`
+                          : "0%",
+                      color: "text-amber",
+                    },
+                    {
+                      label: "Projected Annual Yield",
+                      value: `$${formatCurrency(monthlyYield * 12)}`,
+                      color: "text-primary-light",
+                    },
+                    {
+                      label: "Next Payout Date",
+                      value: "Mar 10, 2026",
+                      color: "text-text-primary",
+                    },
+                    {
+                      label: "Unrealized Gain",
+                      value: `+$${formatCurrency(totalYield)}`,
+                      color: "text-accent-light",
+                    },
+                  ].map((row, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-3 bg-background-tertiary rounded-lg"
+                    >
+                      <span className="text-sm text-text-tertiary">
+                        {row.label}
+                      </span>
+                      <span
+                        className={`text-base font-bold font-mono ${row.color}`}
+                      >
+                        {row.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Portfolio Insights */}
-        {confirmedInvestments.length > 0 && (
-          <div className="px-5 mt-6">
-            <div className="bg-card-light dark:bg-card-dark rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-800">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-primary">
-                  lightbulb
-                </span>
-                <h3 className="font-bold text-lg">Portfolio Insights</h3>
-              </div>
-
-              <div className="space-y-3">
-                <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-4">
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-primary shrink-0">
-                      trending_up
-                    </span>
-                    <div className="text-sm">
-                      <p className="font-bold mb-1">Earning Potential</p>
-                      <p className="text-text-muted text-xs">
-                        Your portfolio is generating an estimated $
-                        {formatCurrency(estimatedReturn / 12, {
-                          maximumFractionDigits: 0,
-                          minimumFractionDigits: 0,
-                        })}{" "}
-                        per month in returns.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {confirmedInvestments.length >= 2 && (
-                  <div className="bg-accent/5 dark:bg-accent/10 border border-accent/20 rounded-xl p-4">
-                    <div className="flex gap-3">
-                      <span className="material-symbols-outlined text-accent shrink-0">
-                        diversity_3
-                      </span>
-                      <div className="text-sm">
-                        <p className="font-bold mb-1">Diversified</p>
-                        <p className="text-text-muted text-xs">
-                          Your assets are spread across{" "}
-                          {confirmedInvestments.length} investments, maintaining
-                          balanced risk exposure.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
