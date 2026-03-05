@@ -3,14 +3,14 @@ import { LandingNav } from "@/components/ui/landing-nav";
 
 /* ---------- data ---------- */
 const STATS = [
-  { value: "$48.2M", label: "Total Value Locked", color: "text-text-primary" },
-  { value: "14.8%", label: "Avg. APY", color: "text-accent-light" },
-  { value: "2,847", label: "Active Investors", color: "text-primary-light" },
-  { value: "$6.8M", label: "Yield Distributed", color: "text-text-primary" },
+  { value: "5", label: "Live Projects", color: "text-text-primary" },
+  { value: "Up to 15%", label: "APY Returns", color: "text-accent-light" },
+  { value: "$5", label: "Min. Investment", color: "text-primary-light" },
+  { value: "Base", label: "Blockchain", color: "text-text-primary" },
 ];
 
 const FEATURES: { icon: string; title: string; desc: string; color: string }[] = [
-  { icon: "token", title: "Fractional Tokenization", desc: "Own fractions of premium assets starting from $500. Each token represents verified ownership backed by legal documentation and on-chain proof.", color: "bg-primary/10 text-primary-light" },
+  { icon: "token", title: "Fractional Tokenization", desc: "Own fractions of premium assets starting from just $5. Each token represents verified ownership backed by legal documentation and on-chain proof.", color: "bg-primary/10 text-primary-light" },
   { icon: "monitoring", title: "Real-Time Asset Monitoring", desc: "Track occupancy rates, revenue streams, and asset valuations in real-time. Live dashboards with institutional-grade data feeds.", color: "bg-accent/10 text-accent-light" },
   { icon: "payments", title: "Automated Yield Distribution", desc: "Smart contract-powered yield payouts -- monthly or quarterly. Track every payment with full transparency and on-chain verification.", color: "bg-purple/10 text-purple" },
   { icon: "verified_user", title: "KYC/AML Compliance", desc: "Institutional-grade identity verification with real-time AML screening, PEP checks, and sanctions list monitoring.", color: "bg-amber/10 text-amber" },
@@ -20,7 +20,7 @@ const FEATURES: { icon: string; title: string; desc: string; color: string }[] =
 
 const STEPS = [
   { num: 1, title: "Create & Verify Account", desc: "Sign up in 60 seconds. Complete KYC verification with our streamlined 3-step process -- personal info, ID upload, and selfie verification. Approved within 24 hours." },
-  { num: 2, title: "Fund Your Wallet", desc: "Deposit via bank transfer, USDT (TRC20), or USDC (ERC20). Connect your Web3 wallet for direct on-chain deposits. Minimum $50, no hidden fees." },
+  { num: 2, title: "Connect Your Wallet", desc: "Connect MetaMask, Coinbase Wallet, or Trust Wallet. Fund with USDC, USDT, or ETH on the Base network. No minimum deposit, no hidden fees." },
   { num: 3, title: "Choose & Invest", desc: "Browse curated RWA projects with full due diligence reports. Select your investment plan -- Flexible, Standard, or Premium -- and confirm with bank-level encryption." },
   { num: 4, title: "Earn Yield & Track", desc: "Receive automated yield payouts monthly or quarterly. Monitor asset performance, occupancy rates, and your portfolio growth in real-time from your dashboard." },
 ];
@@ -85,8 +85,8 @@ export default function LandingPage() {
             {/* Subheading */}
             <p className="text-lg text-text-tertiary leading-relaxed mb-10 max-w-[560px]">
               Access fractional ownership in premium real estate, sustainable
-              agriculture, clean energy, and private credit &mdash; starting from
-              $500. Earn 11&ndash;22% APY backed by real, auditable assets.
+              agriculture, clean energy, and healthcare &mdash; starting from
+              just $5. Earn 10&ndash;15% APY backed by real, auditable assets.
             </p>
 
             {/* CTAs */}
@@ -189,11 +189,11 @@ export default function LandingPage() {
           {/* 5 project cards -- hardcoded from existing DB projects */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { sym: "PTF", name: "Prime Timber Forestry", cat: "Agriculture", loc: "Chiang Mai, Thailand", apy: 14.2, min: 500, risk: "Low", raised: 768000, target: 3000000, investors: 58 },
-              { sym: "SCN", name: "Suburban Care Network", cat: "Healthcare", loc: "Bangkok, Thailand", apy: 12.5, min: 750, risk: "Medium", raised: 100000, target: 5000000, investors: 31 },
-              { sym: "MFX", name: "MetaFlex Exchange", cat: "Fintech", loc: "Singapore", apy: 22, min: 1000, risk: "High", raised: 1200000, target: 10000000, investors: 142 },
-              { sym: "GEV", name: "Green Energy Ventures", cat: "Energy", loc: "Phuket, Thailand", apy: 13.5, min: 500, risk: "Low", raised: 2400000, target: 8000000, investors: 89 },
-              { sym: "MDD", name: "Metropolitan District Dev.", cat: "Real Estate", loc: "Bangkok, Thailand", apy: 11.8, min: 650, risk: "Medium", raised: 400000, target: 8000000, investors: 4 },
+              { sym: "SPPS", name: "Smart Produce Supply", cat: "Agriculture", loc: "Chiang Mai, Thailand", apy: 12.0, min: 5, risk: "Medium", raised: 1200000, target: 5000000, investors: 34 },
+              { sym: "MDD", name: "re:H Medical Device Distribution", cat: "Healthcare", loc: "Bangkok, Thailand", apy: 11.8, min: 5, risk: "Medium", raised: 800000, target: 8000000, investors: 18 },
+              { sym: "KBB", name: "K-Beauty Clinic Bangkok", cat: "Healthcare", loc: "Sukhumvit, Bangkok", apy: 14.5, min: 5, risk: "Medium", raised: 600000, target: 4000000, investors: 22 },
+              { sym: "WRP", name: "Waste Recovery Plant", cat: "Commodities", loc: "Eastern Seaboard, Thailand", apy: 15.0, min: 5, risk: "Medium", raised: 2040000, target: 12000000, investors: 28 },
+              { sym: "REI", name: "Prime City Real Estate Income", cat: "Real Estate", loc: "Bangkok & Chiang Mai", apy: 10.5, min: 5, risk: "Low", raised: 3500000, target: 10000000, investors: 86 },
             ].map((p) => {
               const pct = ((p.raised / p.target) * 100).toFixed(1);
               const fmtRaised = p.raised >= 1e6 ? `$${(p.raised / 1e6).toFixed(1)}M` : `$${(p.raised / 1e3).toFixed(0)}K`;
@@ -345,8 +345,8 @@ export default function LandingPage() {
                 RWA Portfolio Today
               </h2>
               <p className="text-base text-text-tertiary max-w-[500px] mx-auto mb-8 leading-relaxed">
-                Join 2,847+ investors earning institutional-grade returns on
-                tokenized real-world assets. Starting from $500.
+                Earn institutional-grade returns on tokenized real-world
+                assets. Invest from as little as $5.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
@@ -421,7 +421,7 @@ export default function LandingPage() {
               <nav className="flex flex-col gap-1">
                 <Link href="/terms" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Terms of Service</Link>
                 <Link href="/privacy" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Privacy Policy</Link>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Risk Disclosure</a>
+                <Link href="/risk-disclosure" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Risk Disclosure</Link>
                 <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Cookie Policy</a>
               </nav>
             </div>
