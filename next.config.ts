@@ -13,7 +13,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.sumsub.com",
-      "connect-src 'self' https://api.sumsub.com https://*.upstash.io wss://*.walletconnect.com https://*.walletconnect.com https://rpc.walletconnect.com https://*.infura.io https://*.alchemy.com",
+      "connect-src 'self' https://api.sumsub.com https://*.upstash.io wss://*.walletconnect.com https://*.walletconnect.com https://rpc.walletconnect.com https://*.infura.io https://*.alchemy.com https://mainnet.base.org https://sepolia.base.org https://*.base.org",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
