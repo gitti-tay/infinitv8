@@ -110,6 +110,7 @@ export async function PATCH(
       "plans",
       "badge",
       "raisedPercent",
+      "chainProjectId",
     ];
 
     const data: Record<string, unknown> = {};

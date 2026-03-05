@@ -13,7 +13,7 @@ export const CONTRACTS = {
   84532: {
     // Base Sepolia
     investment: (process.env.NEXT_PUBLIC_TESTNET_CONTRACT_ADDRESS ||
-      "0x") as `0x${string}`,
+      "0x6ce394872552FcD22c2DA1E63A6d4F106bB1E801") as `0x${string}`,
     usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as `0x${string}`, // Circle test USDC on Base Sepolia
     usdt: "0x" as `0x${string}`, // Placeholder for testnet
   },
