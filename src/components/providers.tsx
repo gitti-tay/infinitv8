@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { WagmiProvider } from "wagmi";
 import { wagmiConfig } from "@/lib/wagmi";
+import { WalletSync } from "@/components/wallet/wallet-sync";
 import "@rainbow-me/rainbowkit/styles.css";
 
 const queryClient = new QueryClient();
@@ -29,7 +30,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
               }),
             }}
           >
-            <SessionProvider>{children}</SessionProvider>
+            <SessionProvider>
+              <WalletSync />
+              {children}
+            </SessionProvider>
           </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>

@@ -152,6 +152,7 @@ model Project {
   plans             Json?
   badge             String?
   investors         Int         @default(0)
+  chainProjectId    Int?        @unique
 
   investments  Investment[]
   transactions Transaction[]
@@ -164,6 +165,9 @@ model Investment {
   projectId String
   amount    Decimal
   status    InvestmentStatus @default(PENDING)
+  txHash    String?
+  asset     String?
+  network   String?
   createdAt DateTime         @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)

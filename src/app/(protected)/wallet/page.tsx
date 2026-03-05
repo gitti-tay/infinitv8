@@ -1,107 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useDisconnect } from "wagmi";
+import { formatUnits } from "viem";
 import { Header } from "@/components/ui/header";
 import Link from "next/link";
 
-const TOKENS = [
-  {
-    symbol: "USDT",
-    name: "Tether",
-    network: "TRC20",
-    balance: 5240.0,
-    usd: 5240.0,
-    color: "from-[#26a17b] to-[#1a9b72]",
-    letter: "T",
-  },
-  {
-    symbol: "USDC",
-    name: "USD Coin",
-    network: "ERC20",
-    balance: 2300.0,
-    usd: 2300.0,
-    color: "from-[#2775ca] to-[#1a5fb4]",
-    letter: "U",
-  },
-  {
-    symbol: "ETH",
-    name: "Ethereum",
-    network: "Mainnet",
-    balance: 0.0,
-    usd: 0.0,
-    color: "from-[#627eea] to-[#4a6cf7]",
-    letter: "E",
-  },
-];
+import { useTokenBalance } from "@/hooks/useTokenBalance";
+import { useInvestmentTokens } from "@/hooks/useInvestmentTokens";
+import { getBasescanUrl } from "@/lib/contracts/addresses";
 
-const TRANSACTIONS = [
-  {
-    type: "Yield",
-    icon: "payments",
-    iconBg: "bg-accent/10",
-    iconColor: "text-accent-light",
-    asset: "SCN",
-    amount: "+$125.50",
-    amountColor: "text-accent-light",
-    status: "Completed",
-    statusColor: "bg-accent/10 text-accent-light",
-    date: "Feb 15, 2026",
-    hash: "0x8f3a...2d1e",
-  },
-  {
-    type: "Investment",
-    icon: "trending_up",
-    iconBg: "bg-purple/10",
-    iconColor: "text-purple",
-    asset: "MDD",
-    amount: "-$8,000.00",
-    amountColor: "text-text-primary",
-    status: "Confirmed",
-    statusColor: "bg-accent/10 text-accent-light",
-    date: "Feb 10, 2026",
-    hash: "0x4b2c...9f7a",
-  },
-  {
-    type: "Deposit",
-    icon: "add_circle",
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary-light",
-    asset: "USDT",
-    amount: "+$10,000.00",
-    amountColor: "text-accent-light",
-    status: "Completed",
-    statusColor: "bg-accent/10 text-accent-light",
-    date: "Feb 8, 2026",
-    hash: "0x1d5e...7b3c",
-  },
-  {
-    type: "Yield",
-    icon: "payments",
-    iconBg: "bg-accent/10",
-    iconColor: "text-accent-light",
-    asset: "PTF",
-    amount: "+$89.20",
-    amountColor: "text-accent-light",
-    status: "Completed",
-    statusColor: "bg-accent/10 text-accent-light",
-    date: "Jan 20, 2026",
-    hash: "0x9e2f...4a8b",
-  },
-  {
-    type: "Withdrawal",
-    icon: "arrow_circle_up",
-    iconBg: "bg-destructive/10",
-    iconColor: "text-destructive",
-    asset: "USDC",
-    amount: "-$2,000.00",
-    amountColor: "text-text-primary",
-    status: "Completed",
-    statusColor: "bg-accent/10 text-accent-light",
-    date: "Jan 15, 2026",
-    hash: "0x6c8d...1e5f",
-  },
-];
+interface Transaction {
+  id: string;
+  type: string;
+  asset: string;
+  amount: number;
+  status: string;
+  txHash: string | null;
+  description: string | null;
+  createdAt: string;
+  project?: { name: string; ticker: string } | null;
+}
 
 const SECURITY_ITEMS = [
   {
@@ -151,99 +70,154 @@ const SECURITY_ITEMS = [
   },
 ];
 
+function getTxConfig(type: string) {
+  switch (type) {
+    case "INVESTMENT": return { icon: "trending_up", iconBg: "bg-purple/10", iconColor: "text-purple", label: "Investment" };
+    case "YIELD":      return { icon: "payments", iconBg: "bg-accent/10", iconColor: "text-accent-light", label: "Yield" };
+    case "DEPOSIT":    return { icon: "add_circle", iconBg: "bg-primary/10", iconColor: "text-primary-light", label: "Deposit" };
+    case "WITHDRAWAL": return { icon: "arrow_circle_up", iconBg: "bg-destructive/10", iconColor: "text-destructive", label: "Withdrawal" };
+    case "TRANSFER":   return { icon: "swap_horiz", iconBg: "bg-primary/10", iconColor: "text-primary-light", label: "Transfer" };
+    default:           return { icon: "receipt", iconBg: "bg-gray-100", iconColor: "text-gray-500", label: type };
+  }
+}
+
 export default function WalletPage() {
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected, chain, chainId } = useAccount();
   const { disconnect } = useDisconnect();
+  const { usdcBalance, usdtBalance, ethBalance, ethFormatted, isLoading: balLoading } = useTokenBalance();
+  const { balances: tokenHoldings, isLoading: holdingsLoading } = useInvestmentTokens([BigInt(1), BigInt(2), BigInt(3), BigInt(4), BigInt(5)]);
+  const basescanUrl = getBasescanUrl(chainId ?? 8453);
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [txLoading, setTxLoading] = useState(true);
   const [securityToggles, setSecurityToggles] = useState<Record<string, boolean>>({
     fingerprint: true,
     lock: true,
     mail: true,
   });
 
+  // Fetch real transactions
+  useEffect(() => {
+    async function fetchTransactions() {
+      try {
+        const res = await fetch("/api/transactions?limit=5");
+        if (res.ok) {
+          const data = await res.json();
+          setTransactions(Array.isArray(data) ? data : data.transactions || []);
+        }
+      } catch {
+        // Silently fail for transactions
+      } finally {
+        setTxLoading(false);
+      }
+    }
+    fetchTransactions();
+  }, []);
+
   function handleToggle(key: string) {
     setSecurityToggles((prev) => ({ ...prev, [key]: !prev[key] }));
   }
+
+  // Format balance helpers
+  const usdcFormatted = usdcBalance !== undefined ? parseFloat(formatUnits(usdcBalance, 6)) : 0;
+  const usdtFormatted = usdtBalance !== undefined ? parseFloat(formatUnits(usdtBalance, 6)) : 0;
+  const ethFloat = ethBalance !== undefined ? parseFloat(formatUnits(ethBalance, 18)) : 0;
+
+  const tokens = [
+    { symbol: "USDC", name: "USD Coin", network: "Base", balance: usdcFormatted, color: "from-[#2775ca] to-[#1a5fb4]", letter: "U" },
+    { symbol: "USDT", name: "Tether", network: "Base", balance: usdtFormatted, color: "from-[#26a17b] to-[#1a9b72]", letter: "T" },
+    { symbol: "ETH", name: "Ethereum", network: "Base", balance: ethFloat, color: "from-[#627eea] to-[#4a6cf7]", letter: "E" },
+  ];
+
+  const totalUsdBalance = usdcFormatted + usdtFormatted;
 
   return (
     <>
       <Header title="Wallet" showBack={false} />
       <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
 
-        {/* ── Wallet Hero ── */}
+        {/* Wallet Hero */}
         <div className="mt-4 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15 rounded-xl p-6 md:p-8 mb-6">
           <p className="text-[11px] uppercase tracking-widest text-text-muted mb-1">
-            Total Balance
+            Wallet Balance (Stablecoins)
           </p>
           <p className="text-4xl md:text-5xl font-black tracking-tight font-mono">
-            $42,590<span className="text-xl text-text-muted">.00</span>
+            ${Math.floor(totalUsdBalance).toLocaleString("en-US")}
+            <span className="text-xl text-text-muted">
+              .{(totalUsdBalance % 1).toFixed(2).slice(2)}
+            </span>
           </p>
           <div className="flex items-center gap-6 mt-2 mb-5">
             <span className="text-sm text-text-secondary">
-              Available:{" "}
-              <span className="font-mono font-semibold text-text-primary">$7,540.00</span>
+              ETH:{" "}
+              <span className="font-mono font-semibold text-text-primary">
+                {ethFloat.toFixed(6)}
+              </span>
             </span>
-            <span className="text-sm text-text-secondary">
-              Invested:{" "}
-              <span className="font-mono font-semibold text-primary-light">$35,050.00</span>
-            </span>
+            {isConnected && (
+              <span className="text-sm text-text-secondary">
+                Network:{" "}
+                <span className="font-semibold text-primary-light">
+                  {chain?.name ?? "Base"}
+                </span>
+              </span>
+            )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { icon: "add_circle", label: "Deposit", bg: "bg-accent/15", color: "text-accent-light" },
-              { icon: "arrow_circle_up", label: "Withdraw", bg: "bg-destructive/15", color: "text-destructive" },
-              { icon: "swap_horiz", label: "Transfer", bg: "bg-primary/15", color: "text-primary-light" },
-              { icon: "qr_code_scanner", label: "QR Scan", bg: "bg-purple/15", color: "text-purple" },
-            ].map((action) => (
-              <button
-                key={action.label}
-                className="flex flex-col items-center gap-1.5 py-4 bg-background-tertiary border border-border rounded-xl hover:border-primary/30 transition-all"
-              >
-                <div
-                  className={`w-11 h-11 rounded-full ${action.bg} flex items-center justify-center`}
-                >
-                  <span className={`material-symbols-outlined ${action.color}`}>
-                    {action.icon}
-                  </span>
-                </div>
-                <span className="text-[13px] font-semibold">{action.label}</span>
-              </button>
-            ))}
-          </div>
+          {/* CTA */}
+          <Link
+            href="/investments"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-glow"
+          >
+            <span className="material-symbols-outlined text-lg">trending_up</span>
+            Invest Now
+          </Link>
         </div>
 
-        {/* ── Two-Column Grid: Tokens + Connected Wallet ── */}
+        {/* Two-Column Grid: Tokens + Connected Wallet */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
           {/* Token Balances */}
           <div className="bg-card border border-border rounded-xl p-6">
-            <h3 className="text-base font-bold mb-4">Token Balances</h3>
-            <div className="divide-y divide-border">
-              {TOKENS.map((token) => (
-                <div key={token.symbol} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-                  <div
-                    className={`w-10 h-10 rounded-full bg-gradient-to-br ${token.color} flex items-center justify-center text-white font-extrabold text-base shrink-0`}
-                  >
-                    {token.letter}
+            <h3 className="text-base font-bold mb-4">On-Chain Balances</h3>
+            {!isConnected ? (
+              <div className="text-center py-6">
+                <p className="text-sm text-text-muted mb-3">Connect wallet to view balances</p>
+              </div>
+            ) : balLoading ? (
+              <div className="py-6 text-center text-text-muted animate-pulse">Loading balances...</div>
+            ) : (
+              <div className="divide-y divide-border">
+                {tokens.map((token) => (
+                  <div key={token.symbol} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                    <div
+                      className={`w-10 h-10 rounded-full bg-gradient-to-br ${token.color} flex items-center justify-center text-white font-extrabold text-base shrink-0`}
+                    >
+                      {token.letter}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{token.symbol}</p>
+                      <p className="text-xs text-text-muted">
+                        {token.name} &bull; {token.network}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono font-bold text-sm">
+                        {token.symbol === "ETH"
+                          ? token.balance.toFixed(6)
+                          : token.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })
+                        }
+                      </p>
+                      {token.symbol !== "ETH" && (
+                        <p className="text-xs text-text-muted">
+                          ${token.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{token.symbol}</p>
-                    <p className="text-xs text-text-muted">
-                      {token.name} &bull; {token.network}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono font-bold text-sm">
-                      {token.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-xs text-text-muted">
-                      ${token.usd.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Connected Wallet */}
@@ -252,7 +226,6 @@ export default function WalletPage() {
 
             {isConnected ? (
               <>
-                {/* Wallet card */}
                 <div className="flex items-center gap-4 bg-background-tertiary border border-border rounded-xl p-5 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-amber/10 flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-amber">
@@ -260,12 +233,18 @@ export default function WalletPage() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold mb-1">MetaMask</p>
-                    <p className="font-mono text-sm bg-background-secondary px-3 py-1 rounded-md inline-block">
+                    <p className="text-sm font-semibold mb-1">Wallet</p>
+                    <a
+                      href={`${basescanUrl}/address/${address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-sm bg-background-secondary px-3 py-1 rounded-md inline-flex items-center gap-1 hover:text-primary transition-colors"
+                    >
                       {address?.slice(0, 6)}...{address?.slice(-4)}
-                    </p>
+                      <span className="material-symbols-outlined text-xs">open_in_new</span>
+                    </a>
                     <p className="text-xs text-text-muted mt-1">
-                      {chain?.name ?? "Ethereum Mainnet"}
+                      {chain?.name ?? "Base"}
                     </p>
                   </div>
                   <span className="px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent-light rounded-full">
@@ -273,31 +252,37 @@ export default function WalletPage() {
                   </span>
                 </div>
 
-                {/* Details rows */}
                 <div className="space-y-2 mb-4">
                   {[
-                    { label: "Network", value: chain?.name ?? "Ethereum Mainnet" },
-                    { label: "Chain ID", value: String(chain?.id ?? 1), mono: true },
-                    { label: "Connected Since", value: "Feb 5, 2026" },
+                    { label: "Network", value: chain?.name ?? "Base" },
+                    { label: "Chain ID", value: String(chain?.id ?? 8453), mono: true },
+                    { label: "Basescan", value: "View on Basescan", link: `${basescanUrl}/address/${address}` },
                   ].map((row) => (
                     <div
                       key={row.label}
                       className="flex justify-between items-center px-3 py-2.5 bg-background-tertiary rounded-lg text-[13px]"
                     >
                       <span className="text-text-secondary">{row.label}</span>
-                      <span className={`font-semibold ${row.mono ? "font-mono" : ""}`}>
-                        {row.value}
-                      </span>
+                      {"link" in row && row.link ? (
+                        <a
+                          href={row.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-primary hover:underline flex items-center gap-1"
+                        >
+                          {row.value}
+                          <span className="material-symbols-outlined text-xs">open_in_new</span>
+                        </a>
+                      ) : (
+                        <span className={`font-semibold ${row.mono ? "font-mono" : ""}`}>
+                          {row.value}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-background-tertiary border border-border rounded-lg text-[13px] font-medium text-text-secondary hover:border-primary/30 transition-all">
-                    <span className="material-symbols-outlined text-base">swap_horiz</span>
-                    Switch Network
-                  </button>
                   <button
                     onClick={() => disconnect()}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-destructive/10 border border-destructive/20 rounded-lg text-[13px] font-medium text-destructive hover:bg-destructive/15 transition-all"
@@ -316,7 +301,7 @@ export default function WalletPage() {
                 </div>
                 <h4 className="font-bold text-lg mb-2">No Wallet Connected</h4>
                 <p className="text-sm text-text-muted mb-4">
-                  Connect a wallet to view your balances
+                  Connect a wallet to view your on-chain balances and investments
                 </p>
                 <Link
                   href="/wallet/connect"
@@ -329,7 +314,61 @@ export default function WalletPage() {
           </div>
         </div>
 
-        {/* ── Security Settings ── */}
+        {/* Investment Token Holdings (ERC-1155) */}
+        {isConnected && (
+          <div className="bg-card border border-border rounded-xl p-6 mb-6">
+            <h3 className="text-base font-bold mb-4">Investment Tokens (ERC-1155)</h3>
+            <p className="text-xs text-text-muted mb-4">
+              Tokenized investment positions on Base — verifiable on Basescan
+            </p>
+            {holdingsLoading ? (
+              <div className="py-6 text-center text-text-muted animate-pulse">Loading holdings...</div>
+            ) : tokenHoldings.filter(h => h.balance > BigInt(0)).length === 0 ? (
+              <div className="text-center py-6">
+                <span className="material-symbols-outlined text-4xl text-text-muted mb-2">token</span>
+                <p className="text-sm text-text-muted">No investment tokens yet</p>
+                <Link
+                  href="/investments"
+                  className="inline-block mt-3 text-sm text-primary font-bold hover:underline"
+                >
+                  Browse Investment Opportunities
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {tokenHoldings.filter(h => h.balance > BigInt(0)).map((holding) => (
+                  <div
+                    key={holding.projectId}
+                    className="flex items-center gap-4 p-4 bg-background-tertiary border border-border rounded-xl"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary">token</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">Project #{holding.projectId}</p>
+                      <p className="text-xs text-text-muted">Token ID: {holding.projectId}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono font-bold text-sm">
+                        ${formatUnits(holding.balance, 6)}
+                      </p>
+                      <a
+                        href={`${basescanUrl}/token/${address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        View on Basescan
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Security Settings */}
         <div className="bg-card border border-border rounded-xl p-6 mb-6">
           <h3 className="text-base font-bold mb-4">Security Settings</h3>
           <div className="space-y-2">
@@ -373,7 +412,7 @@ export default function WalletPage() {
           </div>
         </div>
 
-        {/* ── Recent Transactions ── */}
+        {/* Recent Transactions */}
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold">Recent Transactions</h3>
@@ -382,103 +421,125 @@ export default function WalletPage() {
             </Link>
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">
-                    Type
-                  </th>
-                  <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">
-                    Asset
-                  </th>
-                  <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">
-                    Amount
-                  </th>
-                  <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">
-                    Status
-                  </th>
-                  <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">
-                    Date
-                  </th>
-                  <th className="text-right py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">
-                    TX Hash
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {TRANSACTIONS.map((tx, i) => (
-                  <tr key={i} className="border-b border-border last:border-b-0">
-                    <td className="py-3">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-7 h-7 rounded-md ${tx.iconBg} flex items-center justify-center`}
-                        >
-                          <span
-                            className={`material-symbols-outlined text-sm ${tx.iconColor}`}
-                          >
-                            {tx.icon}
-                          </span>
-                        </div>
-                        <span className="text-[13px] font-medium">{tx.type}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 text-[13px]">{tx.asset}</td>
-                    <td className={`py-3 font-mono font-semibold text-[13px] ${tx.amountColor}`}>
-                      {tx.amount}
-                    </td>
-                    <td className="py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${tx.statusColor}`}
-                      >
-                        {tx.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-[13px] text-text-secondary">{tx.date}</td>
-                    <td className="py-3 text-right">
-                      <span className="font-mono text-xs text-text-muted">{tx.hash}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile list */}
-          <div className="md:hidden space-y-3">
-            {TRANSACTIONS.map((tx, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 py-3 border-b border-border last:border-b-0"
-              >
-                <div
-                  className={`w-9 h-9 rounded-lg ${tx.iconBg} flex items-center justify-center shrink-0`}
-                >
-                  <span className={`material-symbols-outlined text-lg ${tx.iconColor}`}>
-                    {tx.icon}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{tx.type}</span>
-                    <span className="text-xs text-text-muted">{tx.asset}</span>
-                  </div>
-                  <p className="text-xs text-text-muted">{tx.date}</p>
-                </div>
-                <div className="text-right">
-                  <p className={`font-mono font-semibold text-sm ${tx.amountColor}`}>
-                    {tx.amount}
-                  </p>
-                  <span
-                    className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${tx.statusColor}`}
-                  >
-                    {tx.status}
-                  </span>
-                </div>
+          {txLoading ? (
+            <div className="py-6 text-center text-text-muted animate-pulse">Loading transactions...</div>
+          ) : transactions.length === 0 ? (
+            <div className="text-center py-6">
+              <span className="material-symbols-outlined text-4xl text-text-muted mb-2">receipt_long</span>
+              <p className="text-sm text-text-muted">No transactions yet</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">Type</th>
+                      <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">Asset</th>
+                      <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">Amount</th>
+                      <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">Status</th>
+                      <th className="text-left py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">Date</th>
+                      <th className="text-right py-2.5 text-[11px] text-text-muted uppercase tracking-wider font-medium">TX Hash</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((tx) => {
+                      const config = getTxConfig(tx.type);
+                      const isDebit = ["INVESTMENT", "WITHDRAWAL", "FEE"].includes(tx.type);
+                      return (
+                        <tr key={tx.id} className="border-b border-border last:border-b-0">
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-7 h-7 rounded-md ${config.iconBg} flex items-center justify-center`}>
+                                <span className={`material-symbols-outlined text-sm ${config.iconColor}`}>{config.icon}</span>
+                              </div>
+                              <span className="text-[13px] font-medium">{config.label}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 text-[13px]">{tx.project?.ticker || tx.asset || "—"}</td>
+                          <td className={`py-3 font-mono font-semibold text-[13px] ${isDebit ? "text-text-primary" : "text-accent-light"}`}>
+                            {isDebit ? "-" : "+"}${Math.abs(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                              tx.status === "COMPLETED" ? "bg-accent/10 text-accent-light"
+                              : tx.status === "PENDING" ? "bg-amber/10 text-amber"
+                              : "bg-destructive/10 text-destructive"
+                            }`}>
+                              {tx.status === "COMPLETED" ? "Completed" : tx.status === "PENDING" ? "Pending" : tx.status}
+                            </span>
+                          </td>
+                          <td className="py-3 text-[13px] text-text-secondary">
+                            {new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </td>
+                          <td className="py-3 text-right">
+                            {tx.txHash ? (
+                              <a
+                                href={`${basescanUrl}/tx/${tx.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-xs text-primary hover:underline"
+                              >
+                                {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
+                              </a>
+                            ) : (
+                              <span className="font-mono text-xs text-text-muted">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
+
+              {/* Mobile list */}
+              <div className="md:hidden space-y-3">
+                {transactions.map((tx) => {
+                  const config = getTxConfig(tx.type);
+                  const isDebit = ["INVESTMENT", "WITHDRAWAL", "FEE"].includes(tx.type);
+                  return (
+                    <div key={tx.id} className="flex items-center gap-3 py-3 border-b border-border last:border-b-0">
+                      <div className={`w-9 h-9 rounded-lg ${config.iconBg} flex items-center justify-center shrink-0`}>
+                        <span className={`material-symbols-outlined text-lg ${config.iconColor}`}>{config.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold">{config.label}</span>
+                          <span className="text-xs text-text-muted">{tx.project?.ticker || tx.asset}</span>
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          {new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-mono font-semibold text-sm ${isDebit ? "text-text-primary" : "text-accent-light"}`}>
+                          {isDebit ? "-" : "+"}${Math.abs(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </p>
+                        {tx.txHash ? (
+                          <a
+                            href={`${basescanUrl}/tx/${tx.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-mono text-primary"
+                          >
+                            {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
+                          </a>
+                        ) : (
+                          <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            tx.status === "COMPLETED" ? "bg-accent/10 text-accent-light" : "bg-amber/10 text-amber"
+                          }`}>
+                            {tx.status === "COMPLETED" ? "Completed" : "Pending"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, getCategoryIcon, getCategoryLabel } from "@/lib/utils/format";
 import Link from "next/link";
 import { MetricsCards } from "@/components/dashboard/metrics-cards";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
@@ -21,6 +21,63 @@ function getFormattedDate(): string {
   });
 }
 
+/** Map project category to gradient classes for investment cards */
+function getCategoryGradient(category: string) {
+  switch (category) {
+    case "HEALTHCARE":
+      return {
+        gradientFrom: "from-primary",
+        gradientTo: "to-primary-dark",
+        progressGradient: "from-primary to-primary-light",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary-light",
+      };
+    case "AGRICULTURE":
+      return {
+        gradientFrom: "from-accent",
+        gradientTo: "to-accent-dark",
+        progressGradient: "from-accent to-accent-light",
+        iconBg: "bg-accent/10",
+        iconColor: "text-accent-light",
+      };
+    case "REAL_ESTATE":
+      return {
+        gradientFrom: "from-purple",
+        gradientTo: "to-purple-dark",
+        progressGradient: "from-purple to-[#a78bfa]",
+        iconBg: "bg-purple/10",
+        iconColor: "text-purple",
+      };
+    case "COMMODITIES":
+      return {
+        gradientFrom: "from-amber",
+        gradientTo: "to-amber-dark",
+        progressGradient: "from-amber to-yellow-300",
+        iconBg: "bg-amber/10",
+        iconColor: "text-amber",
+      };
+    default:
+      return {
+        gradientFrom: "from-primary",
+        gradientTo: "to-primary-dark",
+        progressGradient: "from-primary to-primary-light",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary-light",
+      };
+  }
+}
+
+/** Calculate maturity progress as a percentage (0-100) */
+function getMaturityProgress(investedAt: Date, termMonths: number): number {
+  const now = new Date();
+  const maturityDate = new Date(investedAt);
+  maturityDate.setMonth(maturityDate.getMonth() + termMonths);
+  const totalMs = maturityDate.getTime() - investedAt.getTime();
+  const elapsedMs = now.getTime() - investedAt.getTime();
+  if (totalMs <= 0) return 100;
+  return Math.min(100, Math.max(0, Math.round((elapsedMs / totalMs) * 100)));
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   const user = session?.user;
@@ -35,106 +92,178 @@ export default async function DashboardPage() {
     include: { project: true },
   });
 
+  /* ── Compute real metrics ── */
   const totalInvested = investments.reduce(
     (sum, inv) => sum + Number(inv.amount),
     0
   );
-  const estimatedReturn = investments.reduce(
-    (sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100),
+
+  // Paid yield payouts
+  const paidPayouts = await prisma.yieldPayout.findMany({
+    where: { userId: user?.id ?? "", paid: true },
+  });
+  const totalYieldEarned = paidPayouts.reduce(
+    (sum, p) => sum + Number(p.amount),
     0
   );
 
-  // Hardcoded metrics (will be connected to real APIs in Phase 4)
+  // Prorated yield for investments that haven't paid yet
+  const now = new Date();
+  const proratedYield = investments.reduce((sum, inv) => {
+    const amount = Number(inv.amount);
+    const apy = Number(inv.project.apy);
+    const daysHeld = Math.max(
+      0,
+      (now.getTime() - inv.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return sum + (amount * apy) / 100 * (daysHeld / 365);
+  }, 0);
+
+  const portfolioValue = totalInvested + totalYieldEarned;
+  const unrealizedGain = proratedYield - totalYieldEarned;
+  const avgApy =
+    investments.length > 0
+      ? investments.reduce((s, inv) => s + Number(inv.project.apy), 0) /
+        investments.length
+      : 0;
+
+  // Monthly yield estimate: total annual yield / 12
+  const annualYieldEstimate = investments.reduce(
+    (sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100),
+    0
+  );
+  const monthlyYield = annualYieldEstimate / 12;
+
+  // Next payout date: earliest unpaid yield payout, or fallback text
+  const nextUnpaidPayout = await prisma.yieldPayout.findFirst({
+    where: { userId: user?.id ?? "", paid: false },
+    orderBy: { payoutDate: "asc" },
+  });
+  const nextPayoutDate = nextUnpaidPayout
+    ? nextUnpaidPayout.payoutDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "No payouts scheduled";
+
+  // Balance change percent (yield earned vs invested, all time)
+  const balanceChangePercent =
+    totalInvested > 0
+      ? Number(((totalYieldEarned / totalInvested) * 100).toFixed(1))
+      : 0;
+
   const metrics = {
-    totalBalance: 42590,
-    availableBalance: 7540,
-    balanceChangePercent: 18.4,
-    totalYieldEarned: 1245.8,
-    monthlyYield: 279.5,
-    nextPayoutDate: "Mar 15, 2026",
-    portfolioValue: 35050,
-    unrealizedGain: 7050,
-    activeInvestmentCount: investments.length || 3,
-    avgApy: 14.8,
-    vsMarketPercent: 2.1,
+    totalBalance: totalInvested + totalYieldEarned,
+    availableBalance: 0,
+    balanceChangePercent,
+    totalYieldEarned,
+    monthlyYield,
+    nextPayoutDate,
+    portfolioValue,
+    unrealizedGain: Math.max(0, unrealizedGain),
+    activeInvestmentCount: investments.length,
+    avgApy: Number(avgApy.toFixed(1)),
+    vsMarketPercent: 0,
   };
 
-  // Hardcoded active investments for display (matches reference design)
-  const activeInvestments = [
-    {
-      id: "1",
-      ticker: "SCN",
-      name: "Healthcare",
-      icon: "medical_services",
-      invested: 15000,
-      currentValue: 18420,
-      gainPercent: 22.8,
-      maturityPercent: 75,
-      apy: 12.5,
-      gradientFrom: "from-primary",
-      gradientTo: "to-primary-dark",
-      progressGradient: "from-primary to-primary-light",
-    },
-    {
-      id: "2",
-      ticker: "PTF",
-      name: "Agriculture",
-      icon: "agriculture",
-      invested: 12000,
-      currentValue: 14280,
-      gainPercent: 19.0,
-      maturityPercent: 60,
-      apy: 14.2,
-      gradientFrom: "from-accent",
-      gradientTo: "to-accent-dark",
-      progressGradient: "from-accent to-accent-light",
-    },
-    {
-      id: "3",
-      ticker: "MDD",
-      name: "Real Estate",
-      icon: "apartment",
-      invested: 8000,
-      currentValue: 9890,
-      gainPercent: 23.6,
-      maturityPercent: 45,
-      apy: 11.8,
-      gradientFrom: "from-purple",
-      gradientTo: "to-purple-dark",
-      progressGradient: "from-purple to-[#a78bfa]",
-    },
-  ];
+  /* ── Map real investments to active investment display shape ── */
+  const activeInvestments = investments.slice(0, 3).map((inv) => {
+    const amount = Number(inv.amount);
+    const apy = Number(inv.project.apy);
+    const daysHeld = Math.max(
+      0,
+      (now.getTime() - inv.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const proratedGain = (amount * apy) / 100 * (daysHeld / 365);
+    const currentValue = amount + proratedGain;
+    const gainPercent = amount > 0 ? Number(((proratedGain / amount) * 100).toFixed(1)) : 0;
+    const maturityPercent = getMaturityProgress(inv.createdAt, inv.project.term);
+    const gradient = getCategoryGradient(inv.project.category);
 
-  // Hardcoded upcoming payouts
-  const upcomingPayouts = [
-    {
-      id: "1",
-      name: "MDD Payout",
-      date: "Mar 10, 2026",
-      amount: 64.8,
-      frequency: "Monthly",
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary-light",
-    },
-    {
-      id: "2",
-      name: "SCN Payout",
-      date: "Mar 15, 2026",
-      amount: 125.5,
-      frequency: "Monthly",
-      iconBg: "bg-accent/10",
-      iconColor: "text-accent-light",
-    },
-    {
-      id: "3",
-      name: "PTF Payout",
-      date: "Mar 20, 2026",
-      amount: 89.2,
-      frequency: "Monthly",
-      iconBg: "bg-purple/10",
-      iconColor: "text-purple",
-    },
-  ];
+    return {
+      id: inv.id,
+      ticker: inv.project.ticker,
+      name: getCategoryLabel(inv.project.category),
+      icon: getCategoryIcon(inv.project.category),
+      invested: amount,
+      currentValue,
+      gainPercent,
+      maturityPercent,
+      apy,
+      ...gradient,
+    };
+  });
+
+  /* ── Upcoming payouts from YieldPayout where paid = false ── */
+  const unpaidPayouts = await prisma.yieldPayout.findMany({
+    where: { userId: user?.id ?? "", paid: false },
+    include: { project: true },
+    orderBy: { payoutDate: "asc" },
+    take: 5,
+  });
+
+  const upcomingPayouts = unpaidPayouts.map((p) => {
+    const gradient = getCategoryGradient(p.project.category);
+    return {
+      id: p.id,
+      name: `${p.project.ticker} Payout`,
+      date: p.payoutDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      amount: Number(p.amount),
+      frequency: p.project.payout,
+      iconBg: gradient.iconBg,
+      iconColor: gradient.iconColor,
+    };
+  });
+
+  /* ── Recent activity for the RecentActivity component ── */
+  const recentTransactions = await prisma.transaction.findMany({
+    where: { userId: user?.id ?? "" },
+    include: { project: true },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
+  const recentActivity = recentTransactions.map((tx) => {
+    const typeMap: Record<string, { icon: string; iconColor: "accent" | "primary" | "purple" | "destructive" | "amber"; isPositive: boolean }> = {
+      DEPOSIT: { icon: "add_circle", iconColor: "primary", isPositive: true },
+      WITHDRAWAL: { icon: "arrow_circle_up", iconColor: "destructive", isPositive: false },
+      INVESTMENT: { icon: "trending_up", iconColor: "purple", isPositive: false },
+      YIELD: { icon: "payments", iconColor: "accent", isPositive: true },
+      TRANSFER: { icon: "swap_horiz", iconColor: "primary", isPositive: false },
+      FEE: { icon: "receipt_long", iconColor: "amber", isPositive: false },
+    };
+
+    const config = typeMap[tx.type] ?? { icon: "receipt_long", iconColor: "primary" as const, isPositive: false };
+    const label = tx.type === "YIELD"
+      ? `Yield Received — ${tx.project?.ticker ?? tx.asset}`
+      : tx.type === "INVESTMENT"
+        ? `Investment — ${tx.project?.ticker ?? tx.asset}`
+        : tx.type === "DEPOSIT"
+          ? `Deposit — ${tx.asset}`
+          : tx.type === "WITHDRAWAL"
+            ? `Withdrawal — ${tx.asset}`
+            : `${tx.type} — ${tx.asset}`;
+
+    return {
+      id: tx.id,
+      icon: config.icon,
+      iconColor: config.iconColor,
+      title: label,
+      date: tx.createdAt.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      status: tx.status === "COMPLETED" ? "Completed" : tx.status === "PENDING" ? "Pending" : tx.status,
+      amount: Number(tx.amount),
+      isPositive: config.isPositive,
+    };
+  });
 
   const firstName = user?.name?.split(" ")[0] || "Investor";
 
@@ -201,7 +330,21 @@ export default async function DashboardPage() {
           </div>
 
           <div>
-            {activeInvestments.map((inv, idx) => (
+            {activeInvestments.length === 0 ? (
+              <div className="py-8 text-center">
+                <span className="material-symbols-outlined text-3xl text-text-muted mb-2 block">
+                  account_balance_wallet
+                </span>
+                <p className="text-sm text-text-muted">No active investments yet</p>
+                <Link
+                  href="/investments"
+                  className="inline-flex items-center gap-1 mt-3 px-4 py-2 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Browse Projects
+                </Link>
+              </div>
+            ) : (
+              activeInvestments.map((inv, idx) => (
               <div
                 key={inv.id}
                 className={`flex items-center gap-4 py-3.5 ${
@@ -247,7 +390,8 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 
@@ -264,50 +408,61 @@ export default async function DashboardPage() {
                 {upcomingPayouts.length} scheduled
               </span>
             </div>
-            <div className="flex flex-col gap-2.5">
-              {upcomingPayouts.map((payout) => (
-                <div
-                  key={payout.id}
-                  className="flex items-center gap-3 p-2.5 bg-background-tertiary rounded-lg"
-                >
-                  <div
-                    className={`w-9 h-9 rounded-lg ${payout.iconBg} flex items-center justify-center`}
-                  >
-                    <span
-                      className={`material-symbols-outlined text-base ${payout.iconColor}`}
+            {upcomingPayouts.length === 0 ? (
+              <div className="py-6 text-center">
+                <span className="material-symbols-outlined text-2xl text-text-muted mb-1 block">
+                  event_busy
+                </span>
+                <p className="text-xs text-text-muted">No upcoming payouts</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2.5">
+                  {upcomingPayouts.map((payout) => (
+                    <div
+                      key={payout.id}
+                      className="flex items-center gap-3 p-2.5 bg-background-tertiary rounded-lg"
                     >
-                      event
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[13px] font-semibold text-text-primary">
-                      {payout.name}
-                    </p>
-                    <p className="text-[11px] text-text-muted">{payout.date}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-accent-light font-mono">
-                      ${formatCurrency(payout.amount)}
-                    </p>
-                    <p className="text-[10px] text-text-muted">
-                      {payout.frequency}
-                    </p>
-                  </div>
+                      <div
+                        className={`w-9 h-9 rounded-lg ${payout.iconBg} flex items-center justify-center`}
+                      >
+                        <span
+                          className={`material-symbols-outlined text-base ${payout.iconColor}`}
+                        >
+                          event
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[13px] font-semibold text-text-primary">
+                          {payout.name}
+                        </p>
+                        <p className="text-[11px] text-text-muted">{payout.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-accent-light font-mono">
+                          ${formatCurrency(payout.amount)}
+                        </p>
+                        <p className="text-[10px] text-text-muted">
+                          {payout.frequency}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-              <span className="text-xs text-text-muted">
-                Total March Payouts
-              </span>
-              <span className="text-base font-extrabold text-accent-light font-mono">
-                ${formatCurrency(upcomingPayouts.reduce((s, p) => s + p.amount, 0))}
-              </span>
-            </div>
+                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                  <span className="text-xs text-text-muted">
+                    Upcoming Payouts
+                  </span>
+                  <span className="text-base font-extrabold text-accent-light font-mono">
+                    ${formatCurrency(upcomingPayouts.reduce((s, p) => s + p.amount, 0))}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Recent Activity */}
-          <RecentActivity />
+          <RecentActivity items={recentActivity} />
         </div>
       </div>
 

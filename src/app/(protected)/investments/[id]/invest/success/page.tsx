@@ -2,13 +2,13 @@ import Link from "next/link";
 import { Header } from "@/components/ui/header";
 
 interface SuccessPageProps {
-  searchParams: Promise<{ amount?: string; investmentId?: string }>;
+  searchParams: Promise<{ amount?: string; investmentId?: string; txHash?: string }>;
 }
 
 export default async function InvestmentSuccessPage({
   searchParams,
 }: SuccessPageProps) {
-  const { amount, investmentId } = await searchParams;
+  const { amount, investmentId, txHash } = await searchParams;
   const numericAmount = parseFloat(amount || "0");
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -62,7 +62,7 @@ export default async function InvestmentSuccessPage({
               <span className="text-sm text-text-muted">Status</span>
               <span className="text-sm font-bold text-accent">Confirmed</span>
             </div>
-            <div className="flex justify-between items-center py-2">
+            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
               <span className="text-sm text-text-muted">Transaction ID</span>
               <span className="text-xs font-mono text-text-muted">
                 {investmentId
@@ -70,8 +70,36 @@ export default async function InvestmentSuccessPage({
                   : "N/A"}
               </span>
             </div>
+            {txHash && (
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm text-text-muted">On-Chain TX</span>
+                <a
+                  href={`https://basescan.org/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-mono text-primary hover:underline flex items-center gap-1"
+                >
+                  {txHash.slice(0, 6)}...{txHash.slice(-4)}
+                  <span className="material-symbols-outlined text-xs">open_in_new</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Basescan Verification */}
+        {txHash && (
+          <a
+            href={`https://basescan.org/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-sm font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors mb-6"
+          >
+            <span className="material-symbols-outlined text-lg">verified</span>
+            View on Basescan
+            <span className="material-symbols-outlined text-lg">open_in_new</span>
+          </a>
+        )}
 
         {/* What's Next */}
         <div className="w-full bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-2xl p-5 mb-6">

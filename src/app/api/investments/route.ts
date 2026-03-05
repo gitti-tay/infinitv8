@@ -24,9 +24,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { projectId, amount } = result.data;
+    const { projectId, amount, txHash, asset, network } = result.data;
 
     const userId = session.user.id;
+
+    // Check txHash not already recorded (prevent double-spending)
+    if (txHash) {
+      const existingTx = await prisma.transaction.findFirst({ where: { txHash } });
+      if (existingTx) {
+        return NextResponse.json({ error: "Transaction already recorded" }, { status: 409 });
+      }
+    }
 
     const investment = await prisma.$transaction(async (tx) => {
       const project = await tx.project.findUnique({
@@ -53,14 +61,48 @@ export async function POST(request: Request) {
         throw new Error("KYC_REQUIRED");
       }
 
-      return tx.investment.create({
+      const inv = await tx.investment.create({
         data: {
           userId,
           projectId,
           amount,
           status: "CONFIRMED",
+          txHash: txHash || null,
+          asset: asset || null,
+          network: network || null,
         },
       });
+
+      // Create transaction record with on-chain hash
+      if (txHash) {
+        await tx.transaction.create({
+          data: {
+            userId,
+            type: "INVESTMENT",
+            asset: asset || "USDC",
+            amount,
+            status: "COMPLETED",
+            txHash,
+            projectId,
+            description: `Investment in ${project.name}`,
+          },
+        });
+      }
+
+      // Update project raised percentage
+      const totalRaised = await tx.investment.aggregate({
+        _sum: { amount: true },
+        where: { projectId, status: "CONFIRMED" },
+      });
+      const raisedPct = totalRaised._sum.amount
+        ? (Number(totalRaised._sum.amount) / Number(project.targetAmount)) * 100
+        : 0;
+      await tx.project.update({
+        where: { id: projectId },
+        data: { raisedPercent: Math.min(raisedPct, 100) },
+      });
+
+      return inv;
     });
 
     return NextResponse.json(investment, { status: 201 });

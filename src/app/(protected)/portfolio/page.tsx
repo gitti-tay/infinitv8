@@ -5,7 +5,6 @@ import {
   getCategoryIcon,
   getCategoryLabel,
   formatCurrency,
-  getRiskColor,
 } from "@/lib/utils/format";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -91,21 +90,6 @@ function fmtDate(d: Date): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sample payout history (hardcoded for now)                         */
-/* ------------------------------------------------------------------ */
-
-const SAMPLE_PAYOUTS = [
-  { date: "Feb 15, 2026", asset: "SCN", category: "HEALTHCARE", amount: 125.5, status: "Completed" },
-  { date: "Feb 10, 2026", asset: "MDD", category: "REAL_ESTATE", amount: 64.8, status: "Completed" },
-  { date: "Jan 20, 2026", asset: "PTF", category: "AGRICULTURE", amount: 89.2, status: "Completed" },
-  { date: "Jan 15, 2026", asset: "SCN", category: "HEALTHCARE", amount: 125.5, status: "Completed" },
-  { date: "Jan 10, 2026", asset: "MDD", category: "REAL_ESTATE", amount: 64.8, status: "Completed" },
-  { date: "Dec 20, 2025", asset: "PTF", category: "AGRICULTURE", amount: 89.2, status: "Completed" },
-  { date: "Dec 15, 2025", asset: "SCN", category: "HEALTHCARE", amount: 125.5, status: "Completed" },
-  { date: "Dec 10, 2025", asset: "MDD", category: "REAL_ESTATE", amount: 64.8, status: "Completed" },
-];
-
-/* ------------------------------------------------------------------ */
 /*  Donut Chart (SVG, server-renderable)                              */
 /* ------------------------------------------------------------------ */
 
@@ -188,11 +172,26 @@ export default async function PortfolioPage() {
     (sum, inv) => sum + Number(inv.amount),
     0
   );
-  const totalYield = confirmed.reduce(
+
+  // Prorated yield: amount * apy / 100 * (daysHeld / 365)
+  const now = new Date();
+  const totalYield = confirmed.reduce((sum, inv) => {
+    const amount = Number(inv.amount);
+    const apy = Number(inv.project.apy);
+    const daysHeld = Math.max(
+      0,
+      (now.getTime() - inv.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return sum + (amount * apy) / 100 * (daysHeld / 365);
+  }, 0);
+
+  // Annual yield estimate (full year projection from current APY)
+  const annualYieldEstimate = confirmed.reduce(
     (sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100),
     0
   );
-  const monthlyYield = totalYield / 12;
+  const monthlyYield = annualYieldEstimate / 12;
+
   const totalValue = totalInvested + totalYield;
   const gainPct =
     totalInvested > 0 ? ((totalYield / totalInvested) * 100).toFixed(1) : "0";
@@ -209,6 +208,29 @@ export default async function PortfolioPage() {
     value: Number(inv.amount),
     color: getCategoryColor(inv.project.category),
   }));
+
+  /* ---- Real payout history from YieldPayout ---- */
+  const paidPayouts = await prisma.yieldPayout.findMany({
+    where: { userId: session.user.id, paid: true },
+    include: { project: true },
+    orderBy: { payoutDate: "desc" },
+    take: 20,
+  });
+
+  /* ---- Next payout date ---- */
+  const nextUnpaidPayout = await prisma.yieldPayout.findFirst({
+    where: { userId: session.user.id, paid: false },
+    orderBy: { payoutDate: "asc" },
+  });
+  const nextPayoutDateStr = nextUnpaidPayout
+    ? fmtDate(nextUnpaidPayout.payoutDate)
+    : "No payouts scheduled";
+
+  /* ---- Real paid yield total ---- */
+  const realPaidYieldTotal = paidPayouts.reduce(
+    (sum, p) => sum + Number(p.amount),
+    0
+  );
 
   return (
     <>
@@ -238,7 +260,7 @@ export default async function PortfolioPage() {
                       +${formatCurrency(totalYield)} (+{gainPct}%)
                     </span>
                     <span className="text-xs text-text-muted font-normal">
-                      all time
+                      prorated
                     </span>
                   </div>
                 )}
@@ -258,7 +280,7 @@ export default async function PortfolioPage() {
                       ${formatCurrency(totalYield)}
                     </p>
                     <p className="text-xs text-text-muted mt-0.5">
-                      Total Yield
+                      Prorated Yield
                     </p>
                   </div>
                   <div>
@@ -266,7 +288,7 @@ export default async function PortfolioPage() {
                       ${formatCurrency(monthlyYield)}
                     </p>
                     <p className="text-xs text-text-muted mt-0.5">
-                      Monthly Yield
+                      Est. Monthly Yield
                     </p>
                   </div>
                   <div>
@@ -321,7 +343,14 @@ export default async function PortfolioPage() {
                 {investments.map((investment) => {
                   const amount = Number(investment.amount);
                   const apy = Number(investment.project.apy);
-                  const estYield = amount * (apy / 100);
+                  // Prorated yield based on investment age
+                  const daysHeld = Math.max(
+                    0,
+                    (now.getTime() - investment.createdAt.getTime()) /
+                      (1000 * 60 * 60 * 24)
+                  );
+                  const estYield =
+                    (amount * apy) / 100 * (daysHeld / 365);
                   const currentValue = amount + estYield;
                   const gainPercent =
                     amount > 0
@@ -344,7 +373,6 @@ export default async function PortfolioPage() {
 
                   // Calculate next payout: one month from most recent month boundary
                   const nextPayout = new Date(investment.createdAt);
-                  const now = new Date();
                   while (nextPayout < now) {
                     nextPayout.setMonth(nextPayout.getMonth() + 1);
                   }
@@ -422,7 +450,7 @@ export default async function PortfolioPage() {
                               ${formatCurrency(estYield)}
                             </p>
                             <p className="text-[11px] text-text-muted mt-0.5">
-                              Yield Earned
+                              Prorated Yield
                             </p>
                           </div>
                           <div className="text-center p-3 bg-background-tertiary rounded-lg">
@@ -493,38 +521,50 @@ export default async function PortfolioPage() {
                     Payout History
                   </h4>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent-light rounded-full">
-                    {SAMPLE_PAYOUTS.length} total payouts
+                    {paidPayouts.length} total payouts
                   </span>
                 </div>
-                <div className="divide-y divide-border">
-                  {SAMPLE_PAYOUTS.map((p, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                    >
+                {paidPayouts.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <span className="material-symbols-outlined text-3xl text-text-muted mb-2 block">
+                      payments
+                    </span>
+                    <p className="text-sm text-text-muted">No payouts yet</p>
+                    <p className="text-xs text-text-muted mt-1">
+                      Yield payouts will appear here once distributed
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {paidPayouts.map((p) => (
                       <div
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{
-                          backgroundColor: getCategoryColor(p.category),
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-text-primary">
-                          {p.asset} Yield Payout
-                        </p>
-                        <p className="text-[11px] text-text-muted">
-                          {p.date}
-                        </p>
+                        key={p.id}
+                        className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                      >
+                        <div
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{
+                            backgroundColor: getCategoryColor(p.project.category),
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-text-primary">
+                            {p.project.ticker} Yield Payout
+                          </p>
+                          <p className="text-[11px] text-text-muted">
+                            {fmtDate(p.payoutDate)}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold font-mono text-accent-light">
+                          +${Number(p.amount).toFixed(2)}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent-light rounded-full">
+                          Completed
+                        </span>
                       </div>
-                      <span className="text-sm font-bold font-mono text-accent-light">
-                        +${p.amount.toFixed(2)}
-                      </span>
-                      <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent-light rounded-full">
-                        {p.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Yield Analytics */}
@@ -536,11 +576,16 @@ export default async function PortfolioPage() {
                   {[
                     {
                       label: "Total Yield Earned",
-                      value: `$${formatCurrency(totalYield)}`,
+                      value: `$${formatCurrency(realPaidYieldTotal)}`,
                       color: "text-accent-light",
                     },
                     {
-                      label: "Average Monthly Yield",
+                      label: "Prorated Unrealized Yield",
+                      value: `$${formatCurrency(totalYield)}`,
+                      color: "text-text-primary",
+                    },
+                    {
+                      label: "Est. Monthly Yield",
                       value: `$${formatCurrency(monthlyYield)}`,
                       color: "text-text-primary",
                     },
@@ -554,12 +599,12 @@ export default async function PortfolioPage() {
                     },
                     {
                       label: "Projected Annual Yield",
-                      value: `$${formatCurrency(monthlyYield * 12)}`,
+                      value: `$${formatCurrency(annualYieldEstimate)}`,
                       color: "text-primary-light",
                     },
                     {
                       label: "Next Payout Date",
-                      value: "Mar 10, 2026",
+                      value: nextPayoutDateStr,
                       color: "text-text-primary",
                     },
                     {

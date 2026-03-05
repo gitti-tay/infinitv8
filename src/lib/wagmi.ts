@@ -6,7 +6,14 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
-import { arbitrum, base, mainnet, optimism, polygon } from "wagmi/chains";
+import {
+  arbitrum,
+  base,
+  baseSepolia,
+  mainnet,
+  optimism,
+  polygon,
+} from "wagmi/chains";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 if (!projectId) {
@@ -28,13 +35,19 @@ const connectors = connectorsForWallets(
 
 export const wagmiConfig = createConfig({
   connectors,
-  chains: [mainnet, polygon, arbitrum, optimism, base],
+  chains: [base, baseSepolia, mainnet, polygon, arbitrum, optimism],
   transports: {
+    [base.id]: http(
+      process.env.NEXT_PUBLIC_BASE_RPC_URL || "https://mainnet.base.org",
+    ),
+    [baseSepolia.id]: http(
+      process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ||
+        "https://sepolia.base.org",
+    ),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [arbitrum.id]: http(),
     [optimism.id]: http(),
-    [base.id]: http(),
   },
   ssr: true,
 });

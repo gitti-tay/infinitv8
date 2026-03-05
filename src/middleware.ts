@@ -22,6 +22,7 @@ export default auth((req) => {
     !isPublicPage &&
     !pathname.startsWith("/api/health") &&
     !pathname.startsWith("/api/kyc/webhook") &&
+    !pathname.startsWith("/api/token-metadata") &&
     !isLoggedIn
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

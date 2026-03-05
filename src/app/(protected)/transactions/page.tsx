@@ -7,22 +7,26 @@ import { redirect } from "next/navigation";
 
 const FILTER_TABS = [
   { label: "All", value: undefined },
-  { label: "Deposits", value: "deposit" },
-  { label: "Withdrawals", value: "withdrawal" },
-  { label: "Yields", value: "yield" },
-  { label: "Investments", value: "investment" },
+  { label: "Deposits", value: "DEPOSIT" },
+  { label: "Withdrawals", value: "WITHDRAWAL" },
+  { label: "Yields", value: "YIELD" },
+  { label: "Investments", value: "INVESTMENT" },
 ] as const;
 
 function getTypeConfig(type: string) {
   switch (type) {
-    case "deposit":
+    case "DEPOSIT":
       return { icon: "arrow_downward", color: "text-accent", bg: "bg-accent/10", sign: "+" };
-    case "withdrawal":
+    case "WITHDRAWAL":
       return { icon: "arrow_upward", color: "text-destructive", bg: "bg-destructive/10", sign: "-" };
-    case "yield":
+    case "YIELD":
       return { icon: "payments", color: "text-amber", bg: "bg-amber/10", sign: "+" };
-    case "investment":
+    case "INVESTMENT":
       return { icon: "trending_up", color: "text-primary", bg: "bg-primary/10", sign: "-" };
+    case "TRANSFER":
+      return { icon: "swap_horiz", color: "text-primary", bg: "bg-primary/10", sign: "" };
+    case "FEE":
+      return { icon: "receipt_long", color: "text-text-muted", bg: "bg-background-tertiary", sign: "-" };
     default:
       return { icon: "receipt_long", color: "text-text-muted", bg: "bg-background-tertiary", sign: "" };
   }
@@ -30,83 +34,24 @@ function getTypeConfig(type: string) {
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case "completed":
+    case "COMPLETED":
       return "bg-accent/10 text-accent";
-    case "pending":
+    case "PENDING":
       return "bg-amber/10 text-amber";
-    case "failed":
+    case "FAILED":
       return "bg-destructive/10 text-destructive";
+    case "CANCELLED":
+      return "bg-background-tertiary text-text-muted";
     default:
       return "bg-background-tertiary text-text-muted";
   }
 }
 
-// Sample transactions for display
-const SAMPLE_TRANSACTIONS = [
-  {
-    id: "tx_001",
-    type: "deposit",
-    asset: "USDC",
-    amount: 5000,
-    status: "completed",
-    date: "2026-03-04T14:30:00Z",
-    txHash: "0x8a3f...d4e2",
-  },
-  {
-    id: "tx_002",
-    type: "investment",
-    asset: "BKK-RE01",
-    amount: 2500,
-    status: "completed",
-    date: "2026-03-03T10:15:00Z",
-    txHash: "0x7b2e...a1f3",
-  },
-  {
-    id: "tx_003",
-    type: "yield",
-    asset: "BKK-RE01",
-    amount: 18.75,
-    status: "completed",
-    date: "2026-03-01T00:00:00Z",
-    txHash: "0x9c4d...b5e6",
-  },
-  {
-    id: "tx_004",
-    type: "deposit",
-    asset: "USDT",
-    amount: 10000,
-    status: "pending",
-    date: "2026-03-05T08:45:00Z",
-    txHash: "0x1a2b...c3d4",
-  },
-  {
-    id: "tx_005",
-    type: "withdrawal",
-    asset: "USDC",
-    amount: 1000,
-    status: "completed",
-    date: "2026-02-28T16:20:00Z",
-    txHash: "0x5e6f...7g8h",
-  },
-  {
-    id: "tx_006",
-    type: "investment",
-    asset: "PHK-AG02",
-    amount: 5000,
-    status: "completed",
-    date: "2026-02-25T11:00:00Z",
-    txHash: "0x2d3e...f4g5",
-  },
-  {
-    id: "tx_007",
-    type: "yield",
-    asset: "PHK-AG02",
-    amount: 41.67,
-    status: "completed",
-    date: "2026-03-01T00:00:00Z",
-    txHash: "0x6h7i...j8k9",
-  },
-];
+/** Truncate a tx hash for display: 0x1234...abcd */
+function truncateHash(hash: string): string {
+  if (hash.length <= 13) return hash;
+  return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
+}
 
 interface TransactionsPageProps {
   searchParams: Promise<{ filter?: string; q?: string }>;
@@ -122,23 +67,25 @@ export default async function TransactionsPage({
 
   const { filter, q } = await searchParams;
 
-  // Get real investments for stats
-  const investments = await prisma.investment.findMany({
+  /* ── Fetch real transactions from the database ── */
+  const transactions = await prisma.transaction.findMany({
     where: { userId: session.user.id },
-    include: { project: true },
+    include: { project: { select: { name: true, ticker: true } } },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 
-  const totalInvested = investments
-    .filter((inv) => inv.status === "CONFIRMED")
-    .reduce((sum, inv) => sum + Number(inv.amount), 0);
+  /* ── Stats ── */
+  const totalInvested = transactions
+    .filter((tx) => tx.type === "INVESTMENT" && tx.status === "COMPLETED")
+    .reduce((sum, tx) => sum + Number(tx.amount), 0);
 
-  const pendingCount = investments.filter(
-    (inv) => inv.status === "PENDING"
+  const pendingCount = transactions.filter(
+    (tx) => tx.status === "PENDING"
   ).length;
 
-  // Filter sample transactions
-  let filteredTx = SAMPLE_TRANSACTIONS;
+  /* ── Apply filters to real transactions ── */
+  let filteredTx = transactions;
   if (filter) {
     filteredTx = filteredTx.filter((tx) => tx.type === filter);
   }
@@ -148,7 +95,9 @@ export default async function TransactionsPage({
       (tx) =>
         tx.asset.toLowerCase().includes(query) ||
         tx.type.toLowerCase().includes(query) ||
-        tx.txHash.toLowerCase().includes(query)
+        (tx.txHash?.toLowerCase().includes(query) ?? false) ||
+        (tx.project?.name?.toLowerCase().includes(query) ?? false) ||
+        (tx.project?.ticker?.toLowerCase().includes(query) ?? false)
     );
   }
 
@@ -171,7 +120,7 @@ export default async function TransactionsPage({
               account_balance
             </span>
             <p className="text-lg font-bold text-text-primary">
-              ${formatCurrency(totalInvested || 17500, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
+              ${formatCurrency(totalInvested, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
             </p>
             <p className="text-[10px] text-text-muted">Total Invested</p>
           </div>
@@ -180,7 +129,7 @@ export default async function TransactionsPage({
               receipt_long
             </span>
             <p className="text-lg font-bold text-text-primary">
-              {investments.length || SAMPLE_TRANSACTIONS.length}
+              {transactions.length}
             </p>
             <p className="text-[10px] text-text-muted">Transaction Count</p>
           </div>
@@ -189,7 +138,7 @@ export default async function TransactionsPage({
               pending
             </span>
             <p className="text-lg font-bold text-text-primary">
-              {pendingCount || 1}
+              {pendingCount}
             </p>
             <p className="text-[10px] text-text-muted">Pending Count</p>
           </div>
@@ -245,7 +194,9 @@ export default async function TransactionsPage({
             </div>
             <h3 className="font-bold text-lg text-text-primary mb-2">No Transactions</h3>
             <p className="text-sm text-text-muted">
-              No transactions match your filters
+              {transactions.length === 0
+                ? "You have no transactions yet"
+                : "No transactions match your filters"}
             </p>
           </div>
         ) : (
@@ -267,6 +218,11 @@ export default async function TransactionsPage({
                 const statusClass = getStatusBadge(tx.status);
                 const amountColor =
                   config.sign === "+" ? "text-accent" : "text-destructive";
+                const displayAsset = tx.project?.ticker ?? tx.asset;
+                const displayHash = tx.txHash ? truncateHash(tx.txHash) : null;
+                const basescanUrl = tx.txHash
+                  ? `https://basescan.org/tx/${tx.txHash}`
+                  : null;
 
                 return (
                   <div
@@ -287,17 +243,17 @@ export default async function TransactionsPage({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold text-text-primary capitalize">
-                            {tx.type}
+                            {tx.type.toLowerCase()}
                           </span>
                           <span
                             className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${statusClass}`}
                           >
-                            {tx.status}
+                            {tx.status.toLowerCase()}
                           </span>
                         </div>
                         <p className="text-xs text-text-muted">
-                          {tx.asset} &middot;{" "}
-                          {new Date(tx.date).toLocaleDateString("en-US", {
+                          {displayAsset} &middot;{" "}
+                          {tx.createdAt.toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           })}
@@ -305,11 +261,24 @@ export default async function TransactionsPage({
                       </div>
                       <div className="text-right">
                         <p className={`text-sm font-bold ${amountColor}`}>
-                          {config.sign}${formatCurrency(tx.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {config.sign}${formatCurrency(Number(tx.amount), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
-                        <p className="text-[10px] text-text-muted font-mono">
-                          {tx.txHash}
-                        </p>
+                        {displayHash && (
+                          basescanUrl ? (
+                            <a
+                              href={basescanUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-primary font-mono hover:underline"
+                            >
+                              {displayHash}
+                            </a>
+                          ) : (
+                            <p className="text-[10px] text-text-muted font-mono">
+                              {displayHash}
+                            </p>
+                          )
+                        )}
                       </div>
                     </div>
 
@@ -326,30 +295,41 @@ export default async function TransactionsPage({
                           </span>
                         </div>
                         <span className="text-sm font-semibold text-text-primary capitalize">
-                          {tx.type}
+                          {tx.type.toLowerCase()}
                         </span>
                       </div>
                       <span className="text-sm text-text-secondary font-medium">
-                        {tx.asset}
+                        {displayAsset}
                       </span>
                       <span className={`text-sm font-bold text-right ${amountColor}`}>
-                        {config.sign}${formatCurrency(tx.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {config.sign}${formatCurrency(Number(tx.amount), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       <span
                         className={`text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize w-fit ${statusClass}`}
                       >
-                        {tx.status}
+                        {tx.status.toLowerCase()}
                       </span>
                       <span className="text-xs text-text-muted">
-                        {new Date(tx.date).toLocaleDateString("en-US", {
+                        {tx.createdAt.toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                         })}
                       </span>
-                      <span className="text-xs text-text-muted font-mono">
-                        {tx.txHash}
-                      </span>
+                      {basescanUrl ? (
+                        <a
+                          href={basescanUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary font-mono hover:underline"
+                        >
+                          {displayHash}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-text-muted font-mono">
+                          {displayHash ?? "—"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
