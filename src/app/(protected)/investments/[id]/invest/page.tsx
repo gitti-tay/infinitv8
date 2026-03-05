@@ -18,7 +18,7 @@ interface Project {
   status: string;
 }
 
-const QUICK_AMOUNTS = [500, 1000, 2500, 5000];
+const QUICK_AMOUNTS = [5, 10, 50, 100];
 
 export default function InvestAmountPage() {
   const params = useParams<{ id: string }>();

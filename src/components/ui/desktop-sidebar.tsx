@@ -2,11 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { sidebarNavItems } from "@/lib/constants/navigation";
 import { ThemeToggle } from "./theme-toggle";
 
-export function DesktopSidebar() {
+interface DesktopSidebarProps {
+  userName: string;
+  userEmail: string;
+}
+
+export function DesktopSidebar({ userName, userEmail }: DesktopSidebarProps) {
   const pathname = usePathname();
+
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "U";
 
   const sections = sidebarNavItems.reduce((acc, item) => {
     const section = item.section || "Other";
@@ -67,20 +80,27 @@ export function DesktopSidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — User Profile + Sign Out */}
       <div className="px-4 py-4 border-t border-border">
         <Link
           href="/profile"
           className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-background-tertiary transition-colors"
         >
           <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-primary text-sm font-bold">JK</span>
+            <span className="text-primary text-sm font-bold">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-text-primary truncate">Jun Kang</p>
-            <p className="text-xs text-text-muted">Verified Investor</p>
+            <p className="text-sm font-medium text-text-primary truncate">{userName}</p>
+            <p className="text-xs text-text-muted truncate">{userEmail}</p>
           </div>
         </Link>
+        <button
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          className="flex items-center gap-2 w-full px-4 py-2 mt-1 rounded-lg text-sm text-text-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
+        >
+          <span className="material-symbols-outlined text-lg">logout</span>
+          Sign Out
+        </button>
       </div>
     </aside>
   );
