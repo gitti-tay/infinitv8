@@ -4,9 +4,20 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { authConfig } from "./auth.config";
 
+// Wrap PrismaAdapter to prevent session DB writes (JWT-only mode).
+// Keeps account linking for Google OAuth but avoids the known
+// NextAuth v5 beta conflict where the adapter tries to create
+// database sessions for Credentials sign-ins.
+const basePrismaAdapter = PrismaAdapter(prisma);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  adapter: {
+    ...basePrismaAdapter,
+    createSession: undefined as never,
+    deleteSession: undefined as never,
+    updateSession: undefined as never,
+  },
   providers: [
     ...authConfig.providers,
     Credentials({
@@ -48,6 +59,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) session.user.id = token.id as string;
+      return session;
+    },
   },
 });
