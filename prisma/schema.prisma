@@ -133,6 +133,7 @@ model Project {
   riskLevel     RiskLevel
   status        ProjectStatus   @default(ACTIVE)
   raisedPercent Decimal         @default(0)
+
   targetAmount  Decimal
   minInvestment Decimal         @default(500)
   imageUrl      String?
@@ -157,6 +158,8 @@ model Project {
   investments  Investment[]
   transactions Transaction[]
   yieldPayouts YieldPayout[]
+
+  @@index([status])
 }
 
 model Investment {
@@ -174,6 +177,9 @@ model Investment {
   project Project @relation(fields: [projectId], references: [id])
 
   yieldPayouts YieldPayout[]
+
+  @@index([projectId])
+  @@index([createdAt])
 }
 
 model KycVerification {
@@ -236,6 +242,7 @@ model YieldPayout {
   project    Project    @relation(fields: [projectId], references: [id])
   investment Investment @relation(fields: [investmentId], references: [id])
 
+  @@unique([investmentId, payoutDate])
   @@index([userId, payoutDate])
   @@index([paid])
 }

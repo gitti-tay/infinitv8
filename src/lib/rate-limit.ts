@@ -49,6 +49,10 @@ export function getIdentifier(request: Request): string {
   );
 }
 
+/**
+ * Non-strict rate limit check — allows request through when Redis is unavailable.
+ * Use for read-only / non-financial routes (project listing, notifications, etc.).
+ */
 export async function checkRateLimit(
   limiterOrGetter: Limiter | null | (() => Promise<Limiter | null>),
   identifier: string
@@ -77,5 +81,49 @@ export async function checkRateLimit(
   } catch (error) {
     logger.error({ err: error }, "Rate limit check failed");
     return null;
+  }
+}
+
+/**
+ * Strict rate limit check — blocks request when Redis is unavailable.
+ * Use for financial routes (deposit, withdrawal, investment, yield).
+ */
+export async function checkRateLimitStrict(
+  limiterOrGetter: Limiter | null | (() => Promise<Limiter | null>),
+  identifier: string
+): Promise<NextResponse | null> {
+  const limiter = typeof limiterOrGetter === "function" ? await limiterOrGetter() : limiterOrGetter;
+  if (!limiter) {
+    logger.error("Rate limiter unavailable — blocking financial request (fail-closed)");
+    return NextResponse.json(
+      { error: "Service temporarily unavailable. Please try again later." },
+      { status: 503 }
+    );
+  }
+  try {
+    const { success, limit, remaining, reset } = await limiter.limit(identifier);
+
+    if (!success) {
+      logger.warn({ identifier, limit, remaining }, "Rate limit exceeded");
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": String(limit),
+            "X-RateLimit-Remaining": String(remaining),
+            "X-RateLimit-Reset": String(reset),
+          },
+        }
+      );
+    }
+
+    return null;
+  } catch (error) {
+    logger.error({ err: error }, "Rate limit check failed — blocking financial request (fail-closed)");
+    return NextResponse.json(
+      { error: "Service temporarily unavailable. Please try again later." },
+      { status: 503 }
+    );
   }
 }

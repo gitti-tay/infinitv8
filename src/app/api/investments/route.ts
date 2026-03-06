@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { publicClient } from "@/lib/contracts/client";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { apiLimiter, checkRateLimit } from "@/lib/rate-limit";
+import { apiLimiter, checkRateLimit, checkRateLimitStrict } from "@/lib/rate-limit";
 import { createInvestmentSchema } from "@/lib/validations/investment";
 
 export async function POST(request: Request) {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimitResponse = await checkRateLimit(apiLimiter, session.user.id);
+    const rateLimitResponse = await checkRateLimitStrict(apiLimiter, session.user.id);
     if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();
@@ -28,15 +29,31 @@ export async function POST(request: Request) {
 
     const userId = session.user.id;
 
-    // Check txHash not already recorded (prevent double-spending)
-    if (txHash) {
-      const existingTx = await prisma.transaction.findFirst({ where: { txHash } });
-      if (existingTx) {
-        return NextResponse.json({ error: "Transaction already recorded" }, { status: 409 });
-      }
+    // Verify on-chain transaction before recording
+    let receipt;
+    try {
+      receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
+    } catch {
+      return NextResponse.json(
+        { error: "Transaction not found on-chain. It may still be pending." },
+        { status: 400 }
+      );
+    }
+
+    if (receipt.status !== "success") {
+      return NextResponse.json(
+        { error: "Transaction failed on-chain" },
+        { status: 400 }
+      );
     }
 
     const investment = await prisma.$transaction(async (tx) => {
+      // Check txHash uniqueness INSIDE transaction (prevent race condition)
+      const existingTx = await tx.transaction.findFirst({ where: { txHash } });
+      if (existingTx) {
+        throw new Error("DUPLICATE_TX");
+      }
+
       const project = await tx.project.findUnique({
         where: { id: projectId },
       });
@@ -53,6 +70,18 @@ export async function POST(request: Request) {
         throw new Error(`MIN_INVESTMENT:${Number(project.minInvestment)}`);
       }
 
+      // Check fundraising cap
+      const totalRaised = await tx.investment.aggregate({
+        _sum: { amount: true },
+        where: { projectId, status: "CONFIRMED" },
+      });
+      const currentRaised = Number(totalRaised._sum.amount ?? 0);
+      const targetAmount = Number(project.targetAmount);
+      if (currentRaised + amount > targetAmount) {
+        const remaining = targetAmount - currentRaised;
+        throw new Error(`FUNDRAISING_CAP:${remaining}`);
+      }
+
       const user = await tx.user.findUnique({
         where: { id: userId },
       });
@@ -67,36 +96,28 @@ export async function POST(request: Request) {
           projectId,
           amount,
           status: "CONFIRMED",
-          txHash: txHash || null,
-          asset: asset || null,
-          network: network || null,
+          txHash,
+          asset,
+          network,
         },
       });
 
       // Create transaction record with on-chain hash
-      if (txHash) {
-        await tx.transaction.create({
-          data: {
-            userId,
-            type: "INVESTMENT",
-            asset: asset || "USDC",
-            amount,
-            status: "COMPLETED",
-            txHash,
-            projectId,
-            description: `Investment in ${project.name}`,
-          },
-        });
-      }
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "INVESTMENT",
+          asset,
+          amount,
+          status: "COMPLETED",
+          txHash,
+          projectId,
+          description: `Investment in ${project.name}`,
+        },
+      });
 
       // Update project raised percentage
-      const totalRaised = await tx.investment.aggregate({
-        _sum: { amount: true },
-        where: { projectId, status: "CONFIRMED" },
-      });
-      const raisedPct = totalRaised._sum.amount
-        ? (Number(totalRaised._sum.amount) / Number(project.targetAmount)) * 100
-        : 0;
+      const raisedPct = ((currentRaised + amount) / targetAmount) * 100;
       await tx.project.update({
         where: { id: projectId },
         data: { raisedPercent: Math.min(raisedPct, 100) },
@@ -108,6 +129,9 @@ export async function POST(request: Request) {
     return NextResponse.json(investment, { status: 201 });
   } catch (error) {
     if (error instanceof Error) {
+      if (error.message === "DUPLICATE_TX") {
+        return NextResponse.json({ error: "Transaction already recorded" }, { status: 409 });
+      }
       if (error.message === "NOT_FOUND") {
         return NextResponse.json({ error: "Project not found" }, { status: 404 });
       }
@@ -117,6 +141,13 @@ export async function POST(request: Request) {
       if (error.message.startsWith("MIN_INVESTMENT:")) {
         const min = error.message.split(":")[1];
         return NextResponse.json({ error: `Minimum investment is $${min}` }, { status: 400 });
+      }
+      if (error.message.startsWith("FUNDRAISING_CAP:")) {
+        const remaining = error.message.split(":")[1];
+        return NextResponse.json(
+          { error: `Project fundraising cap reached. Maximum remaining: $${remaining}` },
+          { status: 400 }
+        );
       }
       if (error.message === "KYC_REQUIRED") {
         return NextResponse.json({ error: "KYC verification required" }, { status: 403 });

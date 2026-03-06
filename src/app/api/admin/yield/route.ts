@@ -111,8 +111,33 @@ export async function POST(request: Request) {
     }
 
     const apy = Number(project.apy);
-    const payoutDate = new Date();
-    payoutDate.setDate(payoutDate.getDate() + 30);
+
+    // Validate APY bounds
+    if (apy <= 0 || apy > 100) {
+      return NextResponse.json(
+        { error: `Invalid APY value: ${apy}%. Must be between 0 and 100.` },
+        { status: 400 }
+      );
+    }
+
+    // Normalize payout date to first of current month for idempotency
+    const now = new Date();
+    const payoutDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Check for existing payouts this period (idempotency guard)
+    const existingPayout = await prisma.yieldPayout.findFirst({
+      where: {
+        projectId,
+        payoutDate,
+      },
+    });
+
+    if (existingPayout) {
+      return NextResponse.json(
+        { error: `Yield already distributed for ${project.name} for ${payoutDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}` },
+        { status: 409 }
+      );
+    }
 
     let totalYieldDistributed = 0;
     let investorsProcessed = 0;
