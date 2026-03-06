@@ -37,11 +37,15 @@ export default auth((req) => {
     if (pathname.startsWith("/api/admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return Response.redirect(new URL("/auth/signin", req.nextUrl));
+    const signInUrl = new URL("/auth/signin", req.nextUrl);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return Response.redirect(signInUrl);
   }
 
   if (!isPublicPage && !isAuthPage && !isLoggedIn) {
-    return Response.redirect(new URL("/auth/signin", req.nextUrl));
+    const signInUrl = new URL("/auth/signin", req.nextUrl);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return Response.redirect(signInUrl);
   }
 });
 

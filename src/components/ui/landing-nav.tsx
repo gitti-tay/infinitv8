@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
@@ -12,6 +13,8 @@ const NAV_LINKS = [
 ];
 
 export function LandingNav() {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -56,19 +59,31 @@ export function LandingNav() {
         {/* Desktop actions */}
         <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle />
-          <Link
-            href="/auth/signin"
-            className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/auth/signup"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors shadow-glow"
-          >
-            Get Started
-            <span className="material-symbols-outlined text-base">arrow_forward</span>
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors shadow-glow"
+            >
+              Dashboard
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/auth/signin"
+                className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors shadow-glow"
+              >
+                Get Started
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile: theme toggle + hamburger */}
@@ -101,19 +116,31 @@ export function LandingNav() {
               </a>
             ))}
             <div className="h-px bg-border my-2" />
-            <Link
-              href="/auth/signin"
-              className="py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold bg-primary text-white rounded-sm shadow-glow"
-            >
-              Get Started
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold bg-primary text-white rounded-sm shadow-glow"
+              >
+                Dashboard
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold bg-primary text-white rounded-sm shadow-glow"
+                >
+                  Get Started
+                  <span className="material-symbols-outlined text-base">arrow_forward</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

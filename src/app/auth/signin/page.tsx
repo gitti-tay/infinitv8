@@ -2,11 +2,21 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 export default function SignInPage() {
+  return (
+    <Suspense>
+      <SignInForm />
+    </Suspense>
+  );
+}
+
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +39,7 @@ export default function SignInPage() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
-        router.push("/dashboard");
+        router.push(callbackUrl);
         router.refresh();
       }
     } catch {
@@ -291,7 +301,7 @@ export default function SignInPage() {
           {/* Google OAuth */}
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl })}
             className="w-full py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2.5 border border-border bg-background-secondary hover:bg-background-tertiary hover:border-border-light transition-all active:scale-[0.98] text-text-primary"
           >
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24">

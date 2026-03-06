@@ -92,7 +92,7 @@ export default function LandingPage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Link
-                href="/auth/signup"
+                href="/investments"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold bg-primary text-white rounded shadow-glow hover:bg-primary-dark transition-all hover:-translate-y-0.5"
               >
                 Start Investing
@@ -350,7 +350,7 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href="/auth/signup"
+                  href="/investments"
                   className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold bg-primary text-white rounded shadow-glow hover:bg-primary-dark transition-all hover:-translate-y-0.5"
                 >
                   Create Free Account
