@@ -46,7 +46,19 @@ export default auth((req) => {
     return Response.redirect(signInUrl);
   }
 
-  if (!isPublicPage && !isAuthPage && !isLoggedIn) {
+  // Protected routes: require authentication
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/investments") ||
+    pathname.startsWith("/portfolio") ||
+    pathname.startsWith("/wallet") ||
+    pathname.startsWith("/kyc") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/marketplace") ||
+    pathname.startsWith("/notifications") ||
+    pathname.startsWith("/transactions");
+
+  if (isProtectedRoute && !isLoggedIn) {
     const signInUrl = new URL("/auth/signin", req.nextUrl);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return Response.redirect(signInUrl);
