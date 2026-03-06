@@ -37,6 +37,16 @@ function SignInForm() {
       });
 
       if (result?.error) {
+        if (result.error.includes("EMAIL_NOT_VERIFIED") || result.code === "EMAIL_NOT_VERIFIED") {
+          // Trigger verification code send and redirect
+          await fetch("/api/auth/send-verification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
+          return;
+        }
         setError("Invalid email or password");
       } else {
         router.push(callbackUrl);

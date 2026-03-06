@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import bcrypt from "bcryptjs";
 
+import { generateVerificationCode, sendVerificationCode } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authLimiter, checkRateLimit, getIdentifier } from "@/lib/rate-limit";
@@ -38,6 +39,21 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: { email, passwordHash, name },
     });
+
+    // Generate and send verification code
+    const code = generateVerificationCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await prisma.verificationCode.create({
+      data: { email, code, expiresAt },
+    });
+
+    try {
+      await sendVerificationCode(email, code);
+    } catch (emailError) {
+      logger.error({ err: emailError }, "Failed to send verification email");
+      // Don't fail registration if email fails — user can resend from verify page
+    }
 
     return NextResponse.json(
       { id: user.id, email: user.email, name: user.name },

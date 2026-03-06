@@ -28,7 +28,8 @@ export default auth((req) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (isAuthPage && isLoggedIn) {
+  // Redirect logged-in users away from auth pages (except /auth/verify)
+  if (isAuthPage && isLoggedIn && !pathname.startsWith("/auth/verify")) {
     return Response.redirect(new URL("/dashboard", req.nextUrl));
   }
 

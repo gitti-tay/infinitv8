@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { authConfig } from "./auth.config";
+import { generateVerificationCode, sendVerificationCode } from "./email";
 
 // Wrap PrismaAdapter to prevent session DB writes (JWT-only mode).
 // Keeps account linking for Google OAuth but avoids the known
@@ -14,6 +15,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: {
     ...basePrismaAdapter,
+    // Override createUser to never auto-set emailVerified.
+    // Users must verify via our 6-digit code flow.
+    createUser: async (data) => {
+      const { emailVerified: _ignored, ...rest } = data as unknown as Record<string, unknown>;
+      return prisma.user.create({
+        data: {
+          email: rest.email as string,
+          name: (rest.name as string) || null,
+          image: (rest.image as string) || null,
+          emailVerified: null,
+        },
+      });
+    },
     createSession: undefined as never,
     deleteSession: undefined as never,
     updateSession: undefined as never,
@@ -50,6 +64,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Block sign-in if email not verified
+        if (!user.emailVerified) {
+          throw new Error("EMAIL_NOT_VERIFIED");
+        }
+
         return {
           id: user.id,
           email: user.email,
@@ -59,6 +78,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // For Google OAuth: check if email is verified
+      if (account?.provider === "google" && user.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (dbUser && !dbUser.emailVerified) {
+          // Generate and send verification code
+          await prisma.verificationCode.deleteMany({ where: { email: user.email } });
+          const code = generateVerificationCode();
+          const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+          await prisma.verificationCode.create({
+            data: { email: user.email, code, expiresAt },
+          });
+
+          try {
+            await sendVerificationCode(user.email, code);
+          } catch {
+            // If email fails, still redirect to verify page
+          }
+
+          // Redirect to verification page (blocks sign-in)
+          return `/auth/verify?email=${encodeURIComponent(user.email)}`;
+        }
+      }
+
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) token.id = user.id;
       return token;

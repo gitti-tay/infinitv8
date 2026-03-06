@@ -88,7 +88,7 @@ export default function SignUpPage() {
         return;
       }
 
-      router.push("/auth/signin?registered=true");
+      router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
     } catch {
       setError("Something went wrong");
     } finally {
