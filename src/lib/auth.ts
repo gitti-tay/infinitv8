@@ -1,9 +1,13 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { authConfig } from "./auth.config";
 import { generateVerificationCode, sendVerificationCode } from "./email";
+
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "EMAIL_NOT_VERIFIED";
+}
 
 // Wrap PrismaAdapter to prevent session DB writes (JWT-only mode).
 // Keeps account linking for Google OAuth but avoids the known
@@ -66,7 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Block sign-in if email not verified
         if (!user.emailVerified) {
-          throw new Error("EMAIL_NOT_VERIFIED");
+          throw new EmailNotVerifiedError();
         }
 
         return {

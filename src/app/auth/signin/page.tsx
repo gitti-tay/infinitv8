@@ -37,7 +37,7 @@ function SignInForm() {
       });
 
       if (result?.error) {
-        if (result.error.includes("EMAIL_NOT_VERIFIED") || result.code === "EMAIL_NOT_VERIFIED") {
+        if (result.code === "EMAIL_NOT_VERIFIED") {
           // Trigger verification code send and redirect
           await fetch("/api/auth/send-verification", {
             method: "POST",
