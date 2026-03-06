@@ -13,6 +13,9 @@ export default auth((req) => {
     pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
   const isPublicPage =
     pathname === "/" ||
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
+    pathname === "/risk-disclosure" ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/projects");
 
@@ -29,7 +32,7 @@ export default auth((req) => {
   }
 
   // Redirect logged-in users away from auth pages (except /auth/verify)
-  if (isAuthPage && isLoggedIn && !pathname.startsWith("/auth/verify")) {
+  if (isAuthPage && isLoggedIn && !pathname.startsWith("/auth/verify") && !pathname.startsWith("/auth/forgot-password")) {
     return Response.redirect(new URL("/dashboard", req.nextUrl));
   }
 
