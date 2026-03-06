@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
@@ -60,13 +60,21 @@ export function LandingNav() {
         <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle />
           {isLoggedIn ? (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors shadow-glow"
-            >
-              Dashboard
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </Link>
+            <>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Sign Out
+              </button>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors shadow-glow"
+              >
+                Dashboard
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            </>
           ) : (
             <>
               <Link
@@ -117,13 +125,21 @@ export function LandingNav() {
             ))}
             <div className="h-px bg-border my-2" />
             {isLoggedIn ? (
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold bg-primary text-white rounded-sm shadow-glow"
-              >
-                Dashboard
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
-              </Link>
+              <>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold bg-primary text-white rounded-sm shadow-glow"
+                >
+                  Dashboard
+                  <span className="material-symbols-outlined text-base">arrow_forward</span>
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
             ) : (
               <>
                 <Link
