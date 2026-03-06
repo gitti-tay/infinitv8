@@ -4,7 +4,11 @@ import Google from "next-auth/providers/google";
 export const authConfig: NextAuthConfig = {
   trustHost: true,
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
   pages: { signIn: "/auth/signin" },
   providers: [
     Google({
