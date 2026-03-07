@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   const checks: Record<string, unknown> = { status: "ok" };
@@ -22,35 +22,13 @@ export async function GET() {
   checks.NEXTAUTH_URL = process.env.NEXTAUTH_URL || "not set";
   checks.AUTH_URL = process.env.AUTH_URL || "not set";
 
-  // Test Google OAuth flow and capture error via custom logger
-  checks.deploy_version = "v9";
+  // Show last auth error captured by custom logger (from any real request)
+  checks.deploy_version = "v10";
   try {
-    const { handlers } = await import("@/lib/auth");
     const { getLastAuthError } = await import("@/lib/auth.config");
-    const baseUrl = process.env.NEXTAUTH_URL || "https://www.infinitv8.com";
-    const testReq = new NextRequest(
-      new URL("/api/auth/signin/google", baseUrl),
-      { method: "GET", headers: { host: new URL(baseUrl).host } }
-    );
-    const response = await handlers.GET(testReq);
-    const location = response.headers.get("location") || "";
-    checks.google_oauth_test = {
-      status: response.status,
-      redirectsTo: location.startsWith("https://accounts.google.com")
-        ? "google (ok)"
-        : location.substring(0, 200),
-      lastAuthError: getLastAuthError(),
-    };
-  } catch (e) {
-    const { getLastAuthError } = await import("@/lib/auth.config");
-    const err = e instanceof Error ? e : new Error(String(e));
-    checks.google_oauth_test = {
-      error: err.name,
-      message: err.message,
-      cause: err.cause ? String(err.cause) : undefined,
-      lastAuthError: getLastAuthError(),
-      stack: err.stack?.split("\n").slice(0, 8).join("\n"),
-    };
+    checks.lastAuthError = getLastAuthError();
+  } catch {
+    checks.lastAuthError = "could not import";
   }
 
   return NextResponse.json(checks);
