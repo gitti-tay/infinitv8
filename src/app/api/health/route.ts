@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   const checks: Record<string, unknown> = { status: "ok" };
@@ -22,37 +22,29 @@ export async function GET() {
   checks.NEXTAUTH_URL = process.env.NEXTAUTH_URL || "not set";
   checks.AUTH_URL = process.env.AUTH_URL || "not set";
 
-  // Test Google OIDC discovery
-  try {
-    const res = await fetch("https://accounts.google.com/.well-known/openid-configuration");
-    checks.google_discovery = res.ok ? "ok" : `failed: ${res.status}`;
-  } catch (e) {
-    checks.google_discovery = `error: ${e instanceof Error ? e.message : String(e)}`;
-  }
-
-  // Test Google OAuth flow by simulating the sign-in request
-  checks.deploy_version = "v7";
+  // Test Google OAuth flow using NextRequest
+  checks.deploy_version = "v8";
   try {
     const { handlers } = await import("@/lib/auth");
     const baseUrl = process.env.NEXTAUTH_URL || "https://www.infinitv8.com";
-    const testReq = new Request(
-      `${baseUrl}/api/auth/signin/google`,
+    const testReq = new NextRequest(
+      new URL("/api/auth/signin/google", baseUrl),
       { method: "GET", headers: { host: new URL(baseUrl).host } }
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (handlers.GET as any)(testReq);
+    const response = await handlers.GET(testReq);
     const location = response.headers.get("location") || "";
     checks.google_oauth_test = {
       status: response.status,
       redirectsTo: location.startsWith("https://accounts.google.com")
         ? "google (ok)"
-        : location.substring(0, 120),
+        : location.substring(0, 200),
     };
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));
     checks.google_oauth_test = {
       error: err.name,
       message: err.message,
+      cause: err.cause ? String(err.cause) : undefined,
       stack: err.stack?.split("\n").slice(0, 8).join("\n"),
     };
   }
