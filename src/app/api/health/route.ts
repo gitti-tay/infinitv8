@@ -30,12 +30,31 @@ export async function GET() {
     checks.google_discovery = `error: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  // Test NextAuth module import
+  // Test Google OAuth flow by simulating the sign-in request
+  checks.deploy_version = "v7";
   try {
-    const authModule = await import("@/lib/auth");
-    checks.auth_module = authModule.handlers ? "ok" : "no handlers";
+    const { handlers } = await import("@/lib/auth");
+    const baseUrl = process.env.NEXTAUTH_URL || "https://www.infinitv8.com";
+    const testReq = new Request(
+      `${baseUrl}/api/auth/signin/google`,
+      { method: "GET", headers: { host: new URL(baseUrl).host } }
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await (handlers.GET as any)(testReq);
+    const location = response.headers.get("location") || "";
+    checks.google_oauth_test = {
+      status: response.status,
+      redirectsTo: location.startsWith("https://accounts.google.com")
+        ? "google (ok)"
+        : location.substring(0, 120),
+    };
   } catch (e) {
-    checks.auth_module = `error: ${e instanceof Error ? `${e.name}: ${e.message}\n${e.stack?.split('\n').slice(0, 5).join('\n')}` : String(e)}`;
+    const err = e instanceof Error ? e : new Error(String(e));
+    checks.google_oauth_test = {
+      error: err.name,
+      message: err.message,
+      stack: err.stack?.split("\n").slice(0, 8).join("\n"),
+    };
   }
 
   return NextResponse.json(checks);
