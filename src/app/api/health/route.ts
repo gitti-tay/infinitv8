@@ -30,5 +30,13 @@ export async function GET() {
     checks.google_discovery = `error: ${e instanceof Error ? e.message : String(e)}`;
   }
 
+  // Test NextAuth module import
+  try {
+    const authModule = await import("@/lib/auth");
+    checks.auth_module = authModule.handlers ? "ok" : "no handlers";
+  } catch (e) {
+    checks.auth_module = `error: ${e instanceof Error ? `${e.name}: ${e.message}\n${e.stack?.split('\n').slice(0, 5).join('\n')}` : String(e)}`;
+  }
+
   return NextResponse.json(checks);
 }
