@@ -9,10 +9,9 @@ class EmailNotVerifiedError extends CredentialsSignin {
   code = "EMAIL_NOT_VERIFIED";
 }
 
-// Wrap PrismaAdapter to prevent session DB writes (JWT-only mode).
-// Keeps account linking for Google OAuth but avoids the known
-// NextAuth v5 beta conflict where the adapter tries to create
-// database sessions for Credentials sign-ins.
+// Wrap PrismaAdapter: keep account-linking methods for Google OAuth,
+// override createUser to skip auto-verified emails, and provide
+// no-op session methods since we use JWT-only mode.
 const basePrismaAdapter = PrismaAdapter(prisma);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -32,9 +31,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       });
     },
-    createSession: undefined as never,
-    deleteSession: undefined as never,
-    updateSession: undefined as never,
+    // No-op session methods — JWT strategy handles sessions, but
+    // NextAuth validates these methods exist on the adapter.
+    createSession: () => Promise.resolve(null as never),
+    deleteSession: () => Promise.resolve(null as never),
+    updateSession: () => Promise.resolve(null as never),
+    getSessionAndUser: () => Promise.resolve(null),
   },
   providers: [
     ...authConfig.providers,
