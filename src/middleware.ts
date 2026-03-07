@@ -66,5 +66,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|api/health|api/kyc/webhook).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|api/auth|api/health|api/kyc/webhook).*)"],
 };
