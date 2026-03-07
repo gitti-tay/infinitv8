@@ -391,9 +391,17 @@ export default async function ProjectDetailPage({
                             <p className="text-[10px] text-text-muted">{doc.type} - {doc.size}</p>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-text-muted text-sm">download</span>
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 px-4 py-3 bg-primary/5 rounded-lg border border-primary/10">
+                    <span className="material-symbols-outlined text-primary text-base">mail</span>
+                    <p className="text-xs text-text-secondary">
+                      Documents available upon request. Contact us at{" "}
+                      <a href="mailto:info@infinitv8.com" className="text-primary font-semibold hover:underline">
+                        info@infinitv8.com
+                      </a>
+                    </p>
                   </div>
                 </div>
               )}

@@ -86,8 +86,16 @@ export async function POST(request: Request) {
         where: { id: userId },
       });
 
-      if (user?.kycStatus !== "APPROVED") {
-        throw new Error("KYC_REQUIRED");
+      // Allow investment without KYC up to $5,000 cumulative
+      const totalInvested = await tx.investment.aggregate({
+        _sum: { amount: true },
+        where: { userId, status: "CONFIRMED" },
+      });
+      const cumulative = Number(totalInvested._sum.amount ?? 0);
+      const KYC_THRESHOLD = 5000;
+
+      if (cumulative + amount > KYC_THRESHOLD && user?.kycStatus !== "APPROVED") {
+        throw new Error("KYC_THRESHOLD_EXCEEDED");
       }
 
       const inv = await tx.investment.create({
@@ -149,8 +157,11 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
-      if (error.message === "KYC_REQUIRED") {
-        return NextResponse.json({ error: "KYC verification required" }, { status: 403 });
+      if (error.message === "KYC_THRESHOLD_EXCEEDED") {
+        return NextResponse.json(
+          { error: "KYC verification required for investments exceeding $5,000 cumulative. Complete identity verification to continue." },
+          { status: 403 }
+        );
       }
     }
     logger.error({ err: error }, "Investment failed");

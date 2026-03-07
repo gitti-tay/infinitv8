@@ -1,14 +1,12 @@
 "use client";
 
 const STEP_LABELS: Record<string, { label: string; icon: string }> = {
-  overview: { label: "Overview", icon: "info" },
   terms: { label: "Terms", icon: "description" },
-  kyc: { label: "KYC", icon: "verified_user" },
   wallet: { label: "Wallet", icon: "account_balance_wallet" },
   amount: { label: "Amount", icon: "payments" },
 };
 
-const STEPS = ["overview", "terms", "kyc", "wallet", "amount"] as const;
+const STEPS = ["terms", "wallet", "amount"] as const;
 
 interface StepIndicatorProps {
   currentStep: string;

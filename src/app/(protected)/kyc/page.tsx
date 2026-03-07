@@ -39,9 +39,9 @@ export default async function KycStartPage() {
       borderColor: "border-accent/30",
       perks: [
         { icon: "check_circle", label: "View marketplace", color: "text-accent" },
-        { icon: "check_circle", label: "Deposit up to $1,000", color: "text-accent" },
+        { icon: "check_circle", label: "Connect wallet", color: "text-accent" },
+        { icon: "check_circle", label: "View token balances", color: "text-accent" },
         { icon: "check_circle", label: "Explore RWA projects", color: "text-accent" },
-        { icon: "check_circle", label: "Access demo portfolio", color: "text-accent" },
       ],
     },
     {
@@ -49,13 +49,13 @@ export default async function KycStartPage() {
       name: "Identity Verification",
       description: "Government ID + Biometric selfie verification",
       status: "current" as const,
-      statusLabel: "Required",
+      statusLabel: "Recommended",
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
       icon: "badge",
       borderColor: "border-primary/40",
       perks: [
-        { icon: "lock_open", label: "Full investment access", color: "text-primary" },
+        { icon: "lock_open", label: "Unlimited investment access", color: "text-primary" },
         { icon: "lock_open", label: "Deposit up to $50,000", color: "text-primary" },
         { icon: "lock_open", label: "Withdraw up to $10,000/day", color: "text-primary" },
         { icon: "lock_open", label: "Yield payouts enabled", color: "text-primary" },
@@ -197,9 +197,9 @@ export default async function KycStartPage() {
                   </span>
                 )}
                 {level.status === "current" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber/10 text-amber">
-                    <span className="material-symbols-outlined text-sm">pending</span>
-                    Required
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary">
+                    <span className="material-symbols-outlined text-sm">recommend</span>
+                    Recommended
                   </span>
                 )}
                 {level.status === "locked" && (

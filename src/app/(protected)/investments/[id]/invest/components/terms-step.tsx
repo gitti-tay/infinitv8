@@ -4,10 +4,9 @@ import { useRef, useState } from "react";
 
 interface TermsStepProps {
   onContinue: () => void;
-  onBack: () => void;
 }
 
-export function TermsStep({ onContinue, onBack }: TermsStepProps) {
+export function TermsStep({ onContinue }: TermsStepProps) {
   const termsRef = useRef<HTMLDivElement>(null);
   const riskRef = useRef<HTMLDivElement>(null);
   const [termsScrolled, setTermsScrolled] = useState(false);
@@ -175,17 +174,11 @@ export function TermsStep({ onContinue, onBack }: TermsStepProps) {
 
       {/* CTAs */}
       <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-40">
-        <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark flex gap-3">
-          <button
-            onClick={onBack}
-            className="px-6 py-3.5 border border-border rounded-xl text-sm font-semibold text-text-secondary hover:bg-background-secondary transition-colors"
-          >
-            Back
-          </button>
+        <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
           <button
             onClick={onContinue}
             disabled={!canProceed}
-            className="flex-1 py-3.5 bg-primary text-white text-center font-bold rounded-xl shadow-glow hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 bg-primary text-white text-center font-bold rounded-xl shadow-glow hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             I Agree & Continue
           </button>

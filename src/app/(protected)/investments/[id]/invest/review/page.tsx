@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAccount, useSwitchChain } from "wagmi";
 import { formatUnits, parseUnits, parseEther } from "viem";
@@ -54,6 +55,8 @@ export default function InvestReviewPage() {
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("usdc");
   const [error, setError] = useState("");
+  const [kycStatus, setKycStatus] = useState<string>("NONE");
+  const [cumulativeInvested, setCumulativeInvested] = useState(0);
 
   const amount = parseFloat(searchParams.get("amount") || "0");
 
@@ -72,6 +75,36 @@ export default function InvestReviewPage() {
     }
     fetchProject();
   }, [params.id]);
+
+  // Fetch KYC status and cumulative investment for threshold check
+  useEffect(() => {
+    async function fetchKycAndInvestments() {
+      try {
+        const [profileRes, investmentsRes] = await Promise.all([
+          fetch("/api/user/profile"),
+          fetch("/api/investments"),
+        ]);
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          setKycStatus(profile.kycStatus ?? "NONE");
+        }
+        if (investmentsRes.ok) {
+          const investments = await investmentsRes.json();
+          const confirmed = investments.filter(
+            (inv: { status: string }) => inv.status === "CONFIRMED"
+          );
+          const total = confirmed.reduce(
+            (sum: number, inv: { amount: number }) => sum + Number(inv.amount),
+            0
+          );
+          setCumulativeInvested(total);
+        }
+      } catch {
+        // Non-blocking: KYC nudge is informational
+      }
+    }
+    fetchKycAndInvestments();
+  }, []);
 
   // Redirect if no amount
   if (!amount || amount <= 0) {
@@ -100,6 +133,13 @@ export default function InvestReviewPage() {
 
   const isOnBase = chainId === BASE_CHAIN_ID || chainId === 84532;
   const isProcessing = txState !== "idle" && txState !== "error" && txState !== "success";
+
+  const KYC_THRESHOLD = 5000;
+  const isKycApproved = kycStatus === "APPROVED";
+  const wouldExceedThreshold = cumulativeInvested + amount > KYC_THRESHOLD;
+  const kycBlocked = !isKycApproved && wouldExceedThreshold;
+  const remainingBeforeKyc = Math.max(0, KYC_THRESHOLD - cumulativeInvested);
+
   const annualReturn = project ? amount * (project.apy / 100) : 0;
   const platformFee = amount * 0.005;
   const totalAtMaturity = project ? amount + annualReturn * (project.term / 12) : 0;
@@ -209,6 +249,46 @@ export default function InvestReviewPage() {
             </p>
           </div>
         </div>
+
+        {/* KYC Nudge Banner */}
+        {!isKycApproved && !kycBlocked && (
+          <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl">
+              info
+            </span>
+            <div className="flex-1">
+              <p className="font-bold text-sm text-blue-900 dark:text-blue-100">
+                You can invest up to ${remainingBeforeKyc.toLocaleString("en-US")} more without identity verification.
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-400">
+                <Link href="/kyc" className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-200">
+                  Complete KYC
+                </Link>{" "}
+                to unlock unlimited investing.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {kycBlocked && (
+          <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+            <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">
+              gpp_maybe
+            </span>
+            <div className="flex-1">
+              <p className="font-bold text-sm text-red-900 dark:text-red-100">
+                Identity verification required
+              </p>
+              <p className="text-xs text-red-700 dark:text-red-400">
+                Your cumulative investment would exceed $5,000.{" "}
+                <Link href="/kyc" className="underline font-semibold hover:text-red-900 dark:hover:text-red-200">
+                  Complete KYC
+                </Link>{" "}
+                to continue.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Network Guard */}
         {isConnected && !isOnBase && (
@@ -500,7 +580,7 @@ export default function InvestReviewPage() {
         <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-bg-light dark:from-bg-dark">
           <button
             onClick={handleConfirmInvestment}
-            disabled={!isConnected || !isOnBase || isProcessing || hasInsufficientBalance()}
+            disabled={!isConnected || !isOnBase || isProcessing || hasInsufficientBalance() || kycBlocked}
             className="w-full py-3.5 bg-primary text-white font-bold rounded-xl shadow-glow hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isProcessing ? (

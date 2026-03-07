@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { StepIndicator } from "./step-indicator";
-import { OverviewStep } from "./overview-step";
 import { TermsStep } from "./terms-step";
-import { KycCheckStep } from "./kyc-check-step";
 import { WalletCheckStep } from "./wallet-check-step";
 import { AmountStep } from "./amount-step";
 
@@ -24,13 +22,13 @@ interface Project {
   status: string;
 }
 
-type WizardStep = "overview" | "terms" | "kyc" | "wallet" | "amount";
+type WizardStep = "terms" | "wallet" | "amount";
 
-const STEPS: WizardStep[] = ["overview", "terms", "kyc", "wallet", "amount"];
+const STEPS: WizardStep[] = ["terms", "wallet", "amount"];
 
 export function InvestmentWizard() {
   const params = useParams<{ id: string }>();
-  const [currentStep, setCurrentStep] = useState<WizardStep>("overview");
+  const [currentStep, setCurrentStep] = useState<WizardStep>("terms");
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -87,14 +85,8 @@ export function InvestmentWizard() {
     <div className="pt-16 pb-28 px-5 animate-fadeIn">
       <StepIndicator currentStep={currentStep} />
 
-      {currentStep === "overview" && (
-        <OverviewStep project={project} onContinue={goNext} />
-      )}
       {currentStep === "terms" && (
-        <TermsStep onContinue={goNext} onBack={goBack} />
-      )}
-      {currentStep === "kyc" && (
-        <KycCheckStep onContinue={goNext} onBack={goBack} />
+        <TermsStep onContinue={goNext} />
       )}
       {currentStep === "wallet" && (
         <WalletCheckStep onContinue={goNext} onBack={goBack} />
