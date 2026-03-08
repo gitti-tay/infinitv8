@@ -1,14 +1,9 @@
 import { z } from "zod";
 
-export const sumsubWebhookSchema = z.object({
-  applicantId: z.string(),
-  externalUserId: z.string(),
-  type: z.string(),
-  reviewResult: z
-    .object({
-      reviewAnswer: z.string(),
-    })
-    .optional(),
+export const diditWebhookSchema = z.object({
+  session_id: z.string(),
+  status: z.string(),
+  vendor_data: z.string(),
 });
 
-export type SumsubWebhookPayload = z.infer<typeof sumsubWebhookSchema>;
+export type DiditWebhookPayload = z.infer<typeof diditWebhookSchema>;

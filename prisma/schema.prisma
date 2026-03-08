@@ -185,7 +185,7 @@ model Investment {
 model KycVerification {
   id                  String    @id @default(cuid())
   userId              String    @unique
-  sumsubApplicantId   String?
+  providerSessionId   String?
   status              KycStatus @default(PENDING)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

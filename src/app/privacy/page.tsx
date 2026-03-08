@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold text-foreground">3. KYC Data Processing</h2>
           <p>
-            Identity verification is processed by our partner Sumsub. Your documents
+            Identity verification is processed by our partner Didit. Your documents
             are encrypted in transit and at rest. We do not store your identity
             documents on our servers after verification is complete.
           </p>

@@ -12,8 +12,8 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://static.sumsub.com",
-      "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://openidconnect.googleapis.com https://api.sumsub.com https://*.upstash.io wss://*.walletconnect.com https://*.walletconnect.com https://rpc.walletconnect.com https://*.infura.io https://*.alchemy.com https://mainnet.base.org https://sepolia.base.org https://*.base.org",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+      "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://openidconnect.googleapis.com https://verification.didit.me https://*.upstash.io wss://*.walletconnect.com https://*.walletconnect.com https://rpc.walletconnect.com https://*.infura.io https://*.alchemy.com https://mainnet.base.org https://sepolia.base.org https://*.base.org",
       "img-src 'self' data: blob: https://images.unsplash.com https://*.walletconnect.com https://explorer-api.walletconnect.com https://lh3.googleusercontent.com",
       "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

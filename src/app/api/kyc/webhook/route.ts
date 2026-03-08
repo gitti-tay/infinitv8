@@ -3,21 +3,18 @@ import { NextResponse } from "next/server";
 
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { sumsubWebhookSchema } from "@/lib/validations/kyc";
+import { diditWebhookSchema } from "@/lib/validations/kyc";
 
-const SUMSUB_SECRET_KEY = process.env.SUMSUB_SECRET_KEY;
+const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET;
 
 function verifyWebhookSignature(rawBody: Buffer, signature: string): boolean {
-  if (!SUMSUB_SECRET_KEY) {
-    logger.error("SUMSUB_SECRET_KEY is not configured — rejecting webhook");
+  if (!DIDIT_WEBHOOK_SECRET) {
+    logger.error("DIDIT_WEBHOOK_SECRET is not configured — rejecting webhook");
     return false;
   }
+  if (!signature) return false;
 
-  if (!signature) {
-    return false;
-  }
-
-  const hmac = crypto.createHmac("sha256", SUMSUB_SECRET_KEY);
+  const hmac = crypto.createHmac("sha256", DIDIT_WEBHOOK_SECRET);
   hmac.update(rawBody);
   const digest = hmac.digest("hex");
   try {
@@ -30,23 +27,18 @@ function verifyWebhookSignature(rawBody: Buffer, signature: string): boolean {
   }
 }
 
-function mapReviewAnswer(answer: string) {
-  switch (answer) {
-    case "GREEN":
+function mapDiditStatus(status: string) {
+  switch (status) {
+    case "Approved":
       return "APPROVED" as const;
-    case "RED":
+    case "Declined":
+      return "REJECTED" as const;
+    case "In Review":
+      return "PENDING" as const;
+    case "Abandoned":
       return "REJECTED" as const;
     default:
       return "PENDING" as const;
-  }
-}
-
-function mapEventToStatus(type: string) {
-  switch (type) {
-    case "applicantPending":
-      return "PENDING" as const;
-    default:
-      return null;
   }
 }
 
@@ -54,73 +46,45 @@ export async function POST(request: Request) {
   try {
     const rawBody = Buffer.from(await request.arrayBuffer());
 
-    const signature = request.headers.get("x-payload-digest") || "";
+    const signature = request.headers.get("x-signature-v2") || "";
     if (!verifyWebhookSignature(rawBody, signature)) {
-      logger.warn("Invalid Sumsub webhook signature");
+      logger.warn("Invalid Didit webhook signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const parsed = JSON.parse(rawBody.toString("utf-8"));
-    const result = sumsubWebhookSchema.safeParse(parsed);
+    const result = diditWebhookSchema.safeParse(parsed);
     if (!result.success) {
       logger.warn({ errors: result.error.flatten() }, "Invalid webhook payload");
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const { externalUserId, type, reviewResult, applicantId } = result.data;
+    const { session_id, status, vendor_data } = result.data;
+    const userId = vendor_data;
 
-    // Verify user exists before processing
-    const user = await prisma.user.findUnique({
-      where: { id: externalUserId },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      logger.warn({ externalUserId }, "Webhook received for unknown user — acknowledging to stop retries");
+      logger.warn({ userId }, "Webhook received for unknown user — acknowledging");
       return NextResponse.json({ ok: true });
     }
 
-    // Handle applicantReviewed — final status
-    if (type === "applicantReviewed" && reviewResult) {
-      const kycStatus = mapReviewAnswer(reviewResult.reviewAnswer);
+    const kycStatus = mapDiditStatus(status);
 
-      await prisma.$transaction([
-        prisma.kycVerification.update({
-          where: { userId: externalUserId },
-          data: { status: kycStatus, sumsubApplicantId: applicantId },
-        }),
-        prisma.user.update({
-          where: { id: externalUserId },
-          data: { kycStatus },
-        }),
-      ]);
+    await prisma.$transaction([
+      prisma.kycVerification.update({
+        where: { userId },
+        data: { status: kycStatus, providerSessionId: session_id },
+      }),
+      prisma.user.update({
+        where: { id: userId },
+        data: { kycStatus },
+      }),
+    ]);
 
-      logger.info({ userId: externalUserId, kycStatus }, "KYC webhook processed");
-      return NextResponse.json({ ok: true });
-    }
-
-    // Handle intermediate events (applicantPending, etc.)
-    const intermediateStatus = mapEventToStatus(type);
-    if (intermediateStatus) {
-      await prisma.$transaction([
-        prisma.kycVerification.update({
-          where: { userId: externalUserId },
-          data: { status: intermediateStatus },
-        }),
-        prisma.user.update({
-          where: { id: externalUserId },
-          data: { kycStatus: intermediateStatus },
-        }),
-      ]);
-
-      logger.info({ userId: externalUserId, type, status: intermediateStatus }, "KYC intermediate webhook processed");
-    }
-
+    logger.info({ userId, kycStatus, session_id }, "KYC webhook processed");
     return NextResponse.json({ ok: true });
   } catch (error) {
     logger.error({ err: error }, "KYC webhook error");
-    return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 }

@@ -91,7 +91,7 @@ export default async function KycStartPage() {
     },
     {
       q: "How is my data protected?",
-      a: "Your verification data is processed by Sumsub, a SOC 2 Type II certified provider. All data is encrypted with 256-bit TLS in transit and AES-256 at rest.",
+      a: "Your verification data is processed by Didit, a trusted identity verification provider. All data is encrypted with 256-bit TLS in transit and AES-256 at rest.",
     },
     {
       q: "Can I delete my KYC data?",
@@ -115,7 +115,7 @@ export default async function KycStartPage() {
           </h2>
           <p className="text-text-tertiary text-sm max-w-[520px] mx-auto">
             Complete identity verification to unlock full platform features.
-            Powered by <strong className="text-text-secondary">Sumsub</strong> — trusted by Binance, Gate.io, and 2000+ companies.
+            Powered by <strong className="text-text-secondary">Didit</strong> — trusted identity verification with 500 free verifications per month.
           </p>
         </div>
 
