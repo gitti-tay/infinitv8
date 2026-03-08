@@ -264,7 +264,7 @@ export default async function ProjectDetailPage({
                           <span className="text-xs text-text-muted">APY</span>
                         </div>
                         <div className="space-y-1.5 text-xs text-text-secondary">
-                          <div className="flex justify-between"><span>Minimum</span><span className="font-medium">${plan.min}</span></div>
+                          <div className="flex justify-between"><span>Minimum</span><span className="font-medium">${plan.min.toLocaleString()}</span></div>
                           <div className="flex justify-between"><span>Lockup</span><span className="font-medium">{plan.lockup}</span></div>
                           <div className="flex justify-between"><span>Payout</span><span className="font-medium">{plan.payout}</span></div>
                         </div>

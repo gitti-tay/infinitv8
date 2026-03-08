@@ -19,7 +19,7 @@ interface AmountStepProps {
   onBack: () => void;
 }
 
-const QUICK_AMOUNTS = [5, 10, 50, 100];
+const QUICK_AMOUNTS = [5, 100, 1000, 10000];
 
 export function AmountStep({ project, onBack }: AmountStepProps) {
   const router = useRouter();
