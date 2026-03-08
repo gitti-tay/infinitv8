@@ -6,7 +6,7 @@ export const CONTRACTS = {
   8453: {
     // Base mainnet
     investment: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
-      "0x") as `0x${string}`,
+      "0x232738784fa4988d21a20f575ae53f28625eb1f5") as `0x${string}`,
     usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`,
     usdt: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2" as `0x${string}`,
   },
