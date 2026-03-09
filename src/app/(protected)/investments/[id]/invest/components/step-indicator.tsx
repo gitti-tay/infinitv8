@@ -3,10 +3,11 @@
 const STEP_LABELS: Record<string, { label: string; icon: string }> = {
   terms: { label: "Terms", icon: "description" },
   wallet: { label: "Wallet", icon: "account_balance_wallet" },
+  plan: { label: "Plan", icon: "workspace_premium" },
   amount: { label: "Amount", icon: "payments" },
 };
 
-const STEPS = ["terms", "wallet", "amount"] as const;
+const STEPS = ["terms", "wallet", "plan", "amount"] as const;
 
 interface StepIndicatorProps {
   currentStep: string;

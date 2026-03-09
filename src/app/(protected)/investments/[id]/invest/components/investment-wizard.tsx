@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { StepIndicator } from "./step-indicator";
 import { TermsStep } from "./terms-step";
 import { WalletCheckStep } from "./wallet-check-step";
+import { PlanStep, type PlanData } from "./plan-step";
 import { AmountStep } from "./amount-step";
 
 interface Project {
@@ -20,16 +21,18 @@ interface Project {
   category: string;
   location: string;
   status: string;
+  plans?: PlanData[];
 }
 
-type WizardStep = "terms" | "wallet" | "amount";
+type WizardStep = "terms" | "wallet" | "plan" | "amount";
 
-const STEPS: WizardStep[] = ["terms", "wallet", "amount"];
+const STEPS: WizardStep[] = ["terms", "wallet", "plan", "amount"];
 
 export function InvestmentWizard() {
   const params = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState<WizardStep>("terms");
   const [project, setProject] = useState<Project | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -65,6 +68,11 @@ export function InvestmentWizard() {
     }
   }
 
+  function handlePlanSelect(plan: PlanData) {
+    setSelectedPlan(plan);
+    goNext();
+  }
+
   if (loading) {
     return (
       <div className="pt-16 pb-24 md:pb-8 px-5 flex items-center justify-center min-h-screen">
@@ -81,6 +89,8 @@ export function InvestmentWizard() {
     );
   }
 
+  const plans: PlanData[] = Array.isArray(project.plans) ? project.plans : [];
+
   return (
     <div className="pt-16 pb-28 px-5 animate-fadeIn">
       <StepIndicator currentStep={currentStep} />
@@ -91,8 +101,11 @@ export function InvestmentWizard() {
       {currentStep === "wallet" && (
         <WalletCheckStep onContinue={goNext} onBack={goBack} />
       )}
+      {currentStep === "plan" && (
+        <PlanStep plans={plans} onSelect={handlePlanSelect} onBack={goBack} />
+      )}
       {currentStep === "amount" && (
-        <AmountStep project={project} onBack={goBack} />
+        <AmountStep project={project} selectedPlan={selectedPlan} onBack={goBack} />
       )}
     </div>
   );

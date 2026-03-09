@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import type { PlanData } from "./plan-step";
+
 interface Project {
   id: string;
   name: string;
@@ -16,26 +18,45 @@ interface Project {
 
 interface AmountStepProps {
   project: Project;
+  selectedPlan: PlanData | null;
   onBack: () => void;
 }
 
 const QUICK_AMOUNTS = [5, 100, 1000, 10000];
 
-export function AmountStep({ project, onBack }: AmountStepProps) {
+export function AmountStep({ project, selectedPlan, onBack }: AmountStepProps) {
   const router = useRouter();
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
 
+  // Use selected plan values, fallback to project defaults
+  const apy = selectedPlan?.apy ?? project.apy;
+  const minInvestment = selectedPlan?.min ?? project.minInvestment;
+  const term = selectedPlan?.term ?? project.term;
+  const payout = selectedPlan?.payout ?? project.payout;
+  const lockup = selectedPlan?.lockup ?? "";
+  const planName = selectedPlan?.name ?? "";
+
   const numericAmount = parseFloat(amount) || 0;
-  const annualReturn = numericAmount * (project.apy / 100);
+  const annualReturn = numericAmount * (apy / 100);
   const platformFee = numericAmount * 0.005;
 
   function handleContinue() {
-    if (numericAmount < project.minInvestment) {
-      setError(`Minimum investment is $${project.minInvestment.toLocaleString("en-US")}`);
+    if (numericAmount < minInvestment) {
+      setError(`Minimum investment is $${minInvestment.toLocaleString("en-US")}`);
       return;
     }
-    router.push(`/investments/${project.id}/invest/review?amount=${numericAmount}`);
+    const params = new URLSearchParams({
+      amount: numericAmount.toString(),
+      ...(selectedPlan && {
+        planName: selectedPlan.name,
+        planApy: selectedPlan.apy.toString(),
+        planTerm: selectedPlan.term.toString(),
+        planLockup: selectedPlan.lockup,
+        planPayout: selectedPlan.payout,
+      }),
+    });
+    router.push(`/investments/${project.id}/invest/review?${params.toString()}`);
   }
 
   return (
@@ -45,25 +66,25 @@ export function AmountStep({ project, onBack }: AmountStepProps) {
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-bold text-sm">{project.ticker}</h3>
           <span className="px-2 py-0.5 text-[10px] font-semibold bg-white/20 rounded-full">
-            {project.term} Mo Term
+            {planName ? `${planName} · ${term} Mo` : `${term} Mo Term`}
           </span>
         </div>
         <p className="text-white/70 text-xs mb-3">{project.name}</p>
         <div className="flex gap-4">
           <div>
             <p className="text-white/60 text-[10px]">Target APY</p>
-            <p className="text-lg font-bold">{project.apy}%</p>
+            <p className="text-lg font-bold">{apy}%</p>
           </div>
           <div>
             <p className="text-white/60 text-[10px]">Payout</p>
-            <p className="text-lg font-bold">{project.payout}</p>
+            <p className="text-lg font-bold">{payout}</p>
           </div>
-          <div>
-            <p className="text-white/60 text-[10px]">Risk</p>
-            <p className="text-lg font-bold">
-              {project.riskLevel === "LOW" ? "Low" : project.riskLevel === "MEDIUM" ? "Med" : "High"}
-            </p>
-          </div>
+          {lockup && (
+            <div>
+              <p className="text-white/60 text-[10px]">Lockup</p>
+              <p className="text-lg font-bold">{lockup}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -85,7 +106,7 @@ export function AmountStep({ project, onBack }: AmountStepProps) {
           />
         </div>
         <p className="text-text-muted text-xs mt-2">
-          Min: ${project.minInvestment.toLocaleString("en-US")}
+          Min: ${minInvestment.toLocaleString("en-US")}
         </p>
       </div>
 
@@ -148,8 +169,8 @@ export function AmountStep({ project, onBack }: AmountStepProps) {
         <div className="flex gap-3">
           <span className="material-symbols-outlined text-primary text-lg mt-0.5">info</span>
           <p className="text-xs text-text-muted leading-relaxed">
-            Your investment is locked for the full {project.term}-month term.
-            Payouts distributed {project.payout.toLowerCase()} to your wallet.
+            Your investment is locked for {lockup || `${term} months`}.
+            Payouts distributed {payout.toLowerCase()} to your wallet.
             Early withdrawal may incur penalties.
           </p>
         </div>

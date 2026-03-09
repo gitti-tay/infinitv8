@@ -59,6 +59,11 @@ export default function InvestReviewPage() {
   const [cumulativeInvested, setCumulativeInvested] = useState(0);
 
   const amount = parseFloat(searchParams.get("amount") || "0");
+  const planName = searchParams.get("planName") || "";
+  const planApy = parseFloat(searchParams.get("planApy") || "0");
+  const planTerm = parseInt(searchParams.get("planTerm") || "0", 10);
+  const planLockup = searchParams.get("planLockup") || "";
+  const planPayout = searchParams.get("planPayout") || "";
 
   useEffect(() => {
     async function fetchProject() {
@@ -140,9 +145,12 @@ export default function InvestReviewPage() {
   const kycBlocked = !isKycApproved && wouldExceedThreshold;
   const remainingBeforeKyc = Math.max(0, KYC_THRESHOLD - cumulativeInvested);
 
-  const annualReturn = project ? amount * (project.apy / 100) : 0;
+  const effectiveApy = planApy || (project?.apy ?? 0);
+  const effectiveTerm = planTerm || (project?.term ?? 0);
+  const effectivePayout = planPayout || (project?.payout ?? "");
+  const annualReturn = amount * (effectiveApy / 100);
   const platformFee = amount * 0.005;
-  const totalAtMaturity = project ? amount + annualReturn * (project.term / 12) : 0;
+  const totalAtMaturity = amount + annualReturn * (effectiveTerm / 12);
   const monthlyIncome = annualReturn / 12;
 
   async function handleSwitchNetwork() {
@@ -368,20 +376,20 @@ export default function InvestReviewPage() {
 
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
               <p className="text-xs font-bold text-text-muted mb-3 uppercase tracking-wider">
-                Investment Plan
+                Investment Plan{planName ? ` — ${planName}` : ""}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-text-muted mb-1">APY</p>
-                  <p className="font-bold text-primary">{project.apy}%</p>
+                  <p className="font-bold text-primary">{effectiveApy}%</p>
                 </div>
                 <div>
                   <p className="text-xs text-text-muted mb-1">Term</p>
-                  <p className="font-bold">{project.term} Months</p>
+                  <p className="font-bold">{effectiveTerm} Months</p>
                 </div>
                 <div>
                   <p className="text-xs text-text-muted mb-1">Payouts</p>
-                  <p className="font-bold">{project.payout}</p>
+                  <p className="font-bold">{effectivePayout}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text-muted mb-1">Risk</p>
@@ -393,6 +401,12 @@ export default function InvestReviewPage() {
                         : "High"}
                   </p>
                 </div>
+                {planLockup && (
+                  <div>
+                    <p className="text-xs text-text-muted mb-1">Lockup</p>
+                    <p className="font-bold">{planLockup}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -549,7 +563,7 @@ export default function InvestReviewPage() {
                 Important Notice
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                Your investment will be locked for {project.term} months. An ERC-1155 token
+                Your investment will be locked for {planLockup || `${effectiveTerm} months`}. An ERC-1155 token
                 will be minted to your wallet representing your investment. All transactions
                 are verifiable on Basescan.
               </p>

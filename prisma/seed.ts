@@ -24,6 +24,7 @@ async function main() {
     data: {
       name: "Bloombase Sterile Potato Seed",
       ticker: "SPPS",
+      chainProjectId: 1,
         tagline: "Earn from Thailand's premium organic potato supply chain — 6-month harvest cycles, up to 25% APY, USDC payouts.",
         description: "Blockchain-powered agricultural investment in premium organic potato farming across 500 rai in Chiang Mai highlands. Smart contracts automate yield distribution from harvest revenues directly to token holders. Current yield: 3,200 tons/year supplying major Thai retail chains and export markets. Fully transparent supply chain tracked on-chain with IoT soil monitoring. Certified organic by USDA and Thailand's ACT.",
         investmentThesis: "Thailand's organic produce market is growing at 18% CAGR, driven by health-conscious consumers and export demand from Japan and South Korea. Bloombase operates 500 rai of certified organic potato fields in Chiang Mai's fertile highlands, producing 3,200 tons annually. The Seed Cycle Note (SCN) structure lets investors participate in 6-month harvest cycles with revenue distributed in USDC after each cycle.\n\nKey advantages: (1) Established buyer contracts with CP ALL, Tops, and Villa Market guarantee 85% of output at pre-agreed prices; (2) IoT soil monitoring and blockchain traceability command a 40% price premium over conventional potatoes; (3) Government BOI incentives provide 8-year corporate tax exemption.",
@@ -106,6 +107,7 @@ async function main() {
     data: {
       name: "re:H Medical Device Distribution",
       ticker: "MDD",
+      chainProjectId: 2,
         tagline: "Milestone-gated healthcare investment — up to 25% APY as Southeast Asia's medical supply chain scales.",
         description: "Southeast Asia's fastest-growing pharmaceutical and medical equipment distribution network. Serving 340+ hospitals and 1,200+ clinics across Thailand, Vietnam, and Cambodia. Exclusive distribution agreements with 8 global medical device manufacturers. Annual revenue of $12M with 22% net margins. ISO 13485 certified with cold-chain logistics infrastructure.",
         investmentThesis: "Southeast Asia's medical device market is projected to reach $18B by 2028, growing at 8.4% CAGR. re:H has built exclusive distribution partnerships with 8 global manufacturers including Medtronic, Olympus, and Karl Storz, serving 340+ hospitals across Thailand, Vietnam, and Cambodia.\n\nThe Milestone-Gated Revenue Share Note (MRSN) structure protects investors by releasing capital in tranches tied to verifiable distribution milestones. Revenue is generated from wholesale margins (22% net) on medical equipment and consumables, providing predictable cash flows backed by long-term hospital contracts.\n\nKey moat: Cold-chain logistics infrastructure across 3 countries — a $50M+ barrier to entry for competitors.",
@@ -188,6 +190,7 @@ async function main() {
     data: {
       name: "K-Beauty Clinic Bangkok",
       ticker: "KBB",
+      chainProjectId: 3,
         tagline: "Premium Korean beauty clinic in Sukhumvit — monthly cashflow, up to 25% APY from Asia's booming aesthetics market.",
         description: "State-of-the-art Korean beauty and aesthetic medicine clinic in Bangkok's premium Sukhumvit district. Offering advanced Korean dermatology, cosmetic procedures, and anti-aging treatments. Treated 4,800+ international patients with a 96% satisfaction rate. Revenue has grown 42% YoY driven by Southeast Asia's $7.2B medical aesthetics market.",
         investmentThesis: "The medical aesthetics market in Southeast Asia is growing at 15% CAGR, with Bangkok emerging as the regional hub for Korean-standard beauty treatments. K-Beauty Clinic Bangkok operates a premium 800 sqm facility in Sukhumvit Soi 39, staffed by board-certified Korean dermatologists and surgeons.\n\nThe Clinic Cashflow Preferred (CCP) structure provides monthly distributions from operating revenue, offering investors steady income backed by strong patient demand. With 4,800+ patients served and a 96% satisfaction rate, the clinic has achieved $8.2M annual revenue with 35% operating margins.\n\nGrowth drivers: Rising medical tourism (2M+ visitors to Thailand annually for medical procedures), exclusive Korean technology partnerships, and premium pricing power from Korean-board-certified specialists.",
@@ -273,6 +276,7 @@ async function main() {
       {
         name: "Zero-Emission Waste Recycle Plant",
         ticker: "WRP",
+        chainProjectId: 4,
         tagline: "Founders-close infrastructure deal — up to 25% APY from Thailand's largest zero-emission waste processing facility.",
         description: "Utility-scale zero-emission waste recycling facility on Thailand's Eastern Seaboard, processing 500 tons of municipal solid waste daily. Converts waste to energy and recyclable materials using patented pyrolysis technology. 25-year waste processing agreement with 3 provincial municipalities. Carbon credits provide additional revenue uplift.",
         investmentThesis: "Thailand generates 28M tons of waste annually, with only 35% properly processed. Government mandates require 75% waste processing by 2030, creating a massive infrastructure gap. WRP's patented pyrolysis technology processes 500 tons/day of municipal solid waste into clean energy and recyclable materials.\n\nThe Founders Close structure offers early investors a 25% yield uplift over the Base tranche, rewarding participation at the capital formation stage. Revenue comes from three streams: (1) waste processing fees under 25-year municipal contracts, (2) energy sales to the PEA grid, and (3) carbon credit sales on the voluntary carbon market.\n\nWith $2.1M already raised from 28 institutional and accredited investors, the project is well-capitalized and construction is 40% complete with a Q3 2026 operational target.",
@@ -354,6 +358,7 @@ async function main() {
       {
         name: "Prime City Real Estate Income",
         ticker: "REI",
+        chainProjectId: 5,
         tagline: "Tokenized income from premium Bangkok & Chiang Mai properties — up to 25% APY, quarterly net-rent distributions.",
         description: "Diversified real estate income fund investing in premium residential and commercial properties across Bangkok and Chiang Mai. Portfolio includes 12 properties generating stable rental income with 92% average occupancy and annual rental escalation clauses.",
         investmentThesis: "Bangkok's prime real estate yields 5-7% gross rental returns, among the highest in ASEAN. Prime City REI tokenizes a diversified portfolio of 12 income-generating properties across Bangkok's CBD and Chiang Mai's growing expat market.\n\nThe Property Income Token (PIT) structure provides quarterly net-rent distributions after all operating expenses, offering investors passive real estate income without the complexity of direct property ownership.\n\nThe portfolio is deliberately diversified across 3 property types (residential, serviced, commercial) and 2 cities to reduce concentration risk. All properties have annual rental escalation clauses of 3-5%, providing built-in inflation protection.\n\nWith 86 investors and $3.5M raised, this is our most popular offering — reflecting strong demand for stable, yield-generating real assets.",
