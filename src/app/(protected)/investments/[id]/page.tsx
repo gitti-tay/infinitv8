@@ -249,7 +249,11 @@ export default async function ProjectDetailPage({
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {plans.map((plan, i) => (
-                      <div key={i} className={`rounded-xl p-5 border ${plan.badge === "Popular" ? "border-primary/30 bg-primary/[0.03]" : "border-border bg-background-secondary"} relative`}>
+                      <Link
+                        key={i}
+                        href={`/investments/${project.id}/invest?plan=${i}`}
+                        className={`block rounded-xl p-5 border transition-all hover:shadow-md hover:-translate-y-0.5 ${plan.badge === "Popular" ? "border-primary/30 bg-primary/[0.03] hover:border-primary/50" : "border-border bg-background-secondary hover:border-primary/30"} relative group`}
+                      >
                         {plan.badge && (
                           <span className={`absolute -top-2.5 right-4 px-2.5 py-0.5 text-[10px] font-bold rounded-full ${
                             plan.badge === "Popular" ? "bg-primary text-white" : plan.badge === "Pro" ? "bg-purple text-white" : "bg-accent text-white"
@@ -257,7 +261,10 @@ export default async function ProjectDetailPage({
                             {plan.badge}
                           </span>
                         )}
-                        <h4 className="font-bold text-sm text-text-primary mb-1">{plan.name}</h4>
+                        <div className="flex items-start justify-between">
+                          <h4 className="font-bold text-sm text-text-primary mb-1">{plan.name}</h4>
+                          <span className="material-symbols-outlined text-text-muted group-hover:text-primary text-base transition-colors">arrow_forward</span>
+                        </div>
                         <p className="text-xs text-text-muted mb-3">{plan.description}</p>
                         <div className="flex items-baseline gap-1 mb-3">
                           <span className="text-2xl font-extrabold text-primary">{plan.apy}%</span>
@@ -268,7 +275,7 @@ export default async function ProjectDetailPage({
                           <div className="flex justify-between"><span>Lockup</span><span className="font-medium">{plan.lockup}</span></div>
                           <div className="flex justify-between"><span>Payout</span><span className="font-medium">{plan.payout}</span></div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>

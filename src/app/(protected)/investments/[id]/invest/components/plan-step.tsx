@@ -17,10 +17,15 @@ interface PlanStepProps {
   plans: PlanData[];
   onSelect: (plan: PlanData) => void;
   onBack: () => void;
+  preSelectedIndex?: number;
 }
 
-export function PlanStep({ plans, onSelect, onBack }: PlanStepProps) {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+export function PlanStep({ plans, onSelect, onBack, preSelectedIndex }: PlanStepProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(
+    preSelectedIndex !== undefined && preSelectedIndex >= 0 && preSelectedIndex < plans.length
+      ? preSelectedIndex
+      : null
+  );
 
   return (
     <div className="space-y-5">

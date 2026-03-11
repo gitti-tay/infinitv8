@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 import { StepIndicator } from "./step-indicator";
 import { TermsStep } from "./terms-step";
@@ -30,6 +30,8 @@ const STEPS: WizardStep[] = ["terms", "wallet", "plan", "amount"];
 
 export function InvestmentWizard() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
   const [currentStep, setCurrentStep] = useState<WizardStep>("terms");
   const [project, setProject] = useState<Project | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanData | null>(null);
@@ -43,6 +45,15 @@ export function InvestmentWizard() {
         if (!res.ok) throw new Error("Failed to load project");
         const data = await res.json();
         setProject(data);
+
+        // Pre-select plan from query param (e.g., ?plan=0)
+        if (planParam !== null) {
+          const plans: PlanData[] = Array.isArray(data.plans) ? data.plans : [];
+          const idx = parseInt(planParam, 10);
+          if (!isNaN(idx) && idx >= 0 && idx < plans.length) {
+            setSelectedPlan(plans[idx]);
+          }
+        }
       } catch {
         setError("Failed to load project details");
       } finally {
@@ -50,7 +61,7 @@ export function InvestmentWizard() {
       }
     }
     fetchProject();
-  }, [params.id]);
+  }, [params.id, planParam]);
 
   function goNext() {
     const idx = STEPS.indexOf(currentStep);
@@ -102,7 +113,7 @@ export function InvestmentWizard() {
         <WalletCheckStep onContinue={goNext} onBack={goBack} />
       )}
       {currentStep === "plan" && (
-        <PlanStep plans={plans} onSelect={handlePlanSelect} onBack={goBack} />
+        <PlanStep plans={plans} onSelect={handlePlanSelect} onBack={goBack} preSelectedIndex={planParam !== null ? parseInt(planParam, 10) : undefined} />
       )}
       {currentStep === "amount" && (
         <AmountStep project={project} selectedPlan={selectedPlan} onBack={goBack} />

@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAccount, useSwitchChain } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BASE_CHAIN_ID } from "@/lib/contracts/addresses";
+import { isMobileBrowser, isInAppBrowser } from "@/lib/detect-browser";
 
 interface WalletCheckStepProps {
   onContinue: () => void;
@@ -12,9 +15,24 @@ interface WalletCheckStepProps {
 export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isMobile, setIsMobile] = useState(false);
+  const [isWalletBrowser, setIsWalletBrowser] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(isMobileBrowser());
+    setIsWalletBrowser(isInAppBrowser());
+  }, []);
 
   const isOnBase = chainId === BASE_CHAIN_ID || chainId === 84532;
   const isReady = isConnected && isOnBase;
+
+  // On mobile (not in a wallet's in-app browser), show direct deep links
+  const showMobileDeepLinks = isMobile && !isWalletBrowser && !isConnected;
+  const qs = searchParams.toString();
+  const fullPath = qs ? `${pathname}?${qs}` : pathname;
+  const dappUrl = `infinitv8.com${fullPath}`;
 
   async function handleSwitchNetwork() {
     try {
@@ -75,8 +93,65 @@ export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
         </div>
       )}
 
-      {/* Not connected */}
-      {!isConnected && (
+      {/* Not connected — mobile deep links */}
+      {showMobileDeepLinks && (
+        <div className="bg-card-light dark:bg-card-dark border border-gray-100 dark:border-gray-800 rounded-xl p-6">
+          <div className="text-center mb-5">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-primary text-3xl">account_balance_wallet</span>
+            </div>
+            <h3 className="font-bold text-lg text-text-primary mb-1">
+              Open in Wallet App
+            </h3>
+            <p className="text-sm text-text-muted">
+              Tap your wallet below to connect and invest directly
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <a
+              href={`https://metamask.app.link/dapp/${dappUrl}`}
+              className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-background-secondary hover:bg-background-tertiary hover:border-primary/30 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#F6851B]/10 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6" viewBox="0 0 35 33" fill="none"><path d="M32.96 1l-13.14 9.72 2.45-5.73L32.96 1z" fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round"/><path d="M2.66 1l13.02 9.81L13.35 4.99 2.66 1z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/><path d="M28.23 23.53l-3.5 5.34 7.49 2.06 2.14-7.28-6.13-.12z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/><path d="M1.27 23.65l2.13 7.28 7.47-2.06-3.48-5.34-6.12.12z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-text-primary">MetaMask</p>
+                <p className="text-xs text-text-muted">Open in MetaMask app</p>
+              </div>
+              <span className="material-symbols-outlined text-text-muted text-lg">open_in_new</span>
+            </a>
+
+            <a
+              href={`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(`https://${dappUrl}`)}`}
+              className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-background-secondary hover:bg-background-tertiary hover:border-primary/30 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#3375BB]/10 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none"><path d="M20 4L6 10v10c0 9.33 5.97 18.06 14 20 8.03-1.94 14-10.67 14-20V10L20 4z" fill="#3375BB"/><path d="M20 8l-10 4.29v7.14c0 6.67 4.27 12.9 10 14.29 5.73-1.39 10-7.62 10-14.29v-7.14L20 8z" fill="white"/></svg>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-text-primary">Trust Wallet</p>
+                <p className="text-xs text-text-muted">Open in Trust Wallet app</p>
+              </div>
+              <span className="material-symbols-outlined text-text-muted text-lg">open_in_new</span>
+            </a>
+          </div>
+
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-text-muted uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <div className="flex justify-center">
+            <ConnectButton />
+          </div>
+        </div>
+      )}
+
+      {/* Not connected — desktop or in-app browser (RainbowKit only) */}
+      {!isConnected && !showMobileDeepLinks && (
         <div className="bg-card-light dark:bg-card-dark border border-gray-100 dark:border-gray-800 rounded-xl p-6 text-center">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-primary text-3xl">account_balance_wallet</span>

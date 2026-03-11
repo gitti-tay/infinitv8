@@ -29,6 +29,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: "INFINITV8",
+    appUrl: "https://infinitv8.com",
     projectId,
   }
 );
