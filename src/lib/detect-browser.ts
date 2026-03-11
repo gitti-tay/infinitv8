@@ -13,6 +13,15 @@ export function isInAppBrowser(): boolean {
   );
 }
 
+/** Detect if running on iOS (iPhone/iPad/iPod, including iPadOS 13+ which spoofs macOS) */
+export function isIOSBrowser(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent.toLowerCase();
+  if (/iphone|ipad|ipod/.test(ua)) return true;
+  // iPadOS 13+ reports as macOS in UA; detect via Mac platform + touch
+  return /macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
 /** Detect if running on a mobile device (phone or tablet) */
 export function isMobileBrowser(): boolean {
   if (typeof window === "undefined") return false;

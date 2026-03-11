@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useAccount, useSwitchChain } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BASE_CHAIN_ID } from "@/lib/contracts/addresses";
-import { isMobileBrowser, isInAppBrowser } from "@/lib/detect-browser";
+import { isMobileBrowser, isInAppBrowser, isIOSBrowser } from "@/lib/detect-browser";
 
 interface WalletCheckStepProps {
   onContinue: () => void;
@@ -19,10 +19,12 @@ export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
   const searchParams = useSearchParams();
   const [isMobile, setIsMobile] = useState(false);
   const [isWalletBrowser, setIsWalletBrowser] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     setIsMobile(isMobileBrowser());
     setIsWalletBrowser(isInAppBrowser());
+    setIsIOS(isIOSBrowser());
   }, []);
 
   const isOnBase = chainId === BASE_CHAIN_ID || chainId === 84532;
@@ -32,7 +34,8 @@ export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
   const showMobileDeepLinks = isMobile && !isWalletBrowser && !isConnected;
   const qs = searchParams.toString();
   const fullPath = qs ? `${pathname}?${qs}` : pathname;
-  const dappUrl = `infinitv8.com${fullPath}`;
+  const host = typeof window !== "undefined" ? window.location.host : "infinitv8.com";
+  const dappUrl = `${host}${fullPath}`;
 
   async function handleSwitchNetwork() {
     try {
@@ -110,7 +113,7 @@ export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
 
           <div className="space-y-3">
             <a
-              href={`https://metamask.app.link/dapp/${dappUrl}`}
+              href={`https://link.metamask.io/dapp/${dappUrl}`}
               className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-background-secondary hover:bg-background-tertiary hover:border-primary/30 transition-all"
             >
               <div className="w-10 h-10 rounded-xl bg-[#F6851B]/10 flex items-center justify-center shrink-0">
@@ -123,19 +126,22 @@ export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
               <span className="material-symbols-outlined text-text-muted text-lg">open_in_new</span>
             </a>
 
-            <a
-              href={`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(`https://${dappUrl}`)}`}
-              className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-background-secondary hover:bg-background-tertiary hover:border-primary/30 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#3375BB]/10 flex items-center justify-center shrink-0">
-                <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none"><path d="M20 4L6 10v10c0 9.33 5.97 18.06 14 20 8.03-1.94 14-10.67 14-20V10L20 4z" fill="#3375BB"/><path d="M20 8l-10 4.29v7.14c0 6.67 4.27 12.9 10 14.29 5.73-1.39 10-7.62 10-14.29v-7.14L20 8z" fill="white"/></svg>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-sm text-text-primary">Trust Wallet</p>
-                <p className="text-xs text-text-muted">Open in Trust Wallet app</p>
-              </div>
-              <span className="material-symbols-outlined text-text-muted text-lg">open_in_new</span>
-            </a>
+            {/* Trust Wallet deep link only works on Android (removed from iOS in 2021) */}
+            {!isIOS && (
+              <a
+                href={`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(`https://${dappUrl}`)}`}
+                className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-background-secondary hover:bg-background-tertiary hover:border-primary/30 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#3375BB]/10 flex items-center justify-center shrink-0">
+                  <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none"><path d="M20 4L6 10v10c0 9.33 5.97 18.06 14 20 8.03-1.94 14-10.67 14-20V10L20 4z" fill="#3375BB"/><path d="M20 8l-10 4.29v7.14c0 6.67 4.27 12.9 10 14.29 5.73-1.39 10-7.62 10-14.29v-7.14L20 8z" fill="white"/></svg>
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-sm text-text-primary">Trust Wallet</p>
+                  <p className="text-xs text-text-muted">Open in Trust Wallet app</p>
+                </div>
+                <span className="material-symbols-outlined text-text-muted text-lg">open_in_new</span>
+              </a>
+            )}
           </div>
 
           <div className="flex items-center gap-3 my-4">
