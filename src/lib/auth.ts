@@ -89,26 +89,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "google" && user.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email },
+          select: { emailVerified: true },
         });
 
-        if (dbUser && !dbUser.emailVerified) {
-          // Generate and send verification code
-          await prisma.verificationCode.deleteMany({ where: { email: user.email } });
-          const code = generateVerificationCode();
-          const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-          await prisma.verificationCode.create({
-            data: { email: user.email, code, expiresAt },
-          });
-
-          try {
-            await sendVerificationCode(user.email, code);
-          } catch {
-            // If email fails, still redirect to verify page
-          }
-
-          // Redirect to verification page (blocks sign-in)
-          return `/auth/verify?email=${encodeURIComponent(user.email)}`;
+        // Already verified or new user (will be created by adapter) — allow sign-in
+        if (!dbUser || dbUser.emailVerified) {
+          return true;
         }
+
+        // Unverified existing user — send verification code
+        await prisma.verificationCode.deleteMany({ where: { email: user.email } });
+        const code = generateVerificationCode();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await prisma.verificationCode.create({
+          data: { email: user.email, code, expiresAt },
+        });
+
+        try {
+          await sendVerificationCode(user.email, code);
+        } catch {
+          // If email fails, still redirect to verify page
+        }
+
+        return `/auth/verify?email=${encodeURIComponent(user.email)}`;
       }
 
       return true;

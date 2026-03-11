@@ -11,6 +11,16 @@ import "@rainbow-me/rainbowkit/styles.css";
 
 const queryClient = new QueryClient();
 
+/** Lightweight providers for auth pages — no Web3 overhead */
+export function AuthProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <SessionProvider>{children}</SessionProvider>
+    </ThemeProvider>
+  );
+}
+
+/** Full providers with Web3 (Wagmi, RainbowKit) for protected pages */
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
