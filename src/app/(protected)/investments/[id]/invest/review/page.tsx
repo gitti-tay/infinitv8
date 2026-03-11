@@ -136,7 +136,7 @@ export default function InvestReviewPage() {
     return bal < amount;
   }
 
-  const isOnBase = chainId === BASE_CHAIN_ID || chainId === 84532;
+  const isOnBase = chainId === BASE_CHAIN_ID;
   const isProcessing = txState !== "idle" && txState !== "error" && txState !== "success";
 
   const KYC_THRESHOLD = 5000;

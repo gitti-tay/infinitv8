@@ -9,7 +9,6 @@ import { createConfig, http } from "wagmi";
 import {
   arbitrum,
   base,
-  baseSepolia,
   mainnet,
   optimism,
   polygon,
@@ -36,14 +35,10 @@ const connectors = connectorsForWallets(
 
 export const wagmiConfig = createConfig({
   connectors,
-  chains: [base, baseSepolia, mainnet, polygon, arbitrum, optimism],
+  chains: [base, mainnet, polygon, arbitrum, optimism],
   transports: {
     [base.id]: http(
       process.env.NEXT_PUBLIC_BASE_RPC_URL || "https://mainnet.base.org",
-    ),
-    [baseSepolia.id]: http(
-      process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ||
-        "https://sepolia.base.org",
     ),
     [mainnet.id]: http(),
     [polygon.id]: http(),

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { publicClient } from "@/lib/contracts/client";
+import { CONTRACTS, BASE_CHAIN_ID } from "@/lib/contracts/addresses";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { apiLimiter, checkRateLimit, checkRateLimitStrict } from "@/lib/rate-limit";
@@ -43,6 +44,27 @@ export async function POST(request: Request) {
     if (receipt.status !== "success") {
       return NextResponse.json(
         { error: "Transaction failed on-chain" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the transaction targeted the investment contract (not an EOA or wrong address)
+    const expectedContract = CONTRACTS[BASE_CHAIN_ID].investment.toLowerCase();
+    if (!receipt.to || receipt.to.toLowerCase() !== expectedContract) {
+      logger.error(
+        { expected: expectedContract, actual: receipt.to, txHash },
+        "Investment tx targeted wrong address",
+      );
+      return NextResponse.json(
+        { error: "Transaction was not sent to the INFINITV8 investment contract. Please ensure you are on Base mainnet." },
+        { status: 400 }
+      );
+    }
+
+    // Verify the transaction produced events (contract execution, not EOA call)
+    if (receipt.logs.length === 0) {
+      return NextResponse.json(
+        { error: "Transaction produced no events — investment contract did not execute." },
         { status: 400 }
       );
     }

@@ -6,12 +6,13 @@ import { erc20Abi, type Address, maxUint256 } from "viem";
 import {
   useAccount,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { waitForTransactionReceipt } from "wagmi/actions";
 
 import { INFINITV8InvestmentABI } from "@/lib/contracts/abi";
 import { getContracts } from "@/lib/contracts/addresses";
+import { wagmiConfig } from "@/lib/wagmi";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -59,15 +60,9 @@ export function useInvestment(): UseInvestmentReturn {
   // ── Write helpers ────────────────────────────────────────────
   const { writeContractAsync } = useWriteContract();
 
-  // ── Wait for receipt (used imperatively via refetch) ─────────
-  const { data: receipt } = useWaitForTransactionReceipt({
-    hash: activeTxHash,
-    query: { enabled: !!activeTxHash },
-  });
-
   // ── Allowance check for current token (lazy, not auto-fetched) ─
   const [allowanceToken, setAllowanceToken] = useState<Address | undefined>();
-  const { data: currentAllowance, refetch: refetchAllowance } =
+  const { refetch: refetchAllowance } =
     useReadContract({
       address: allowanceToken,
       abi: erc20Abi,
@@ -87,30 +82,33 @@ export function useInvestment(): UseInvestmentReturn {
     throw new Error("ETH does not use a token address");
   }
 
-  async function waitForTx(hash: `0x${string}`): Promise<void> {
+  /**
+   * Wait for transaction receipt and verify it actually executed on a contract.
+   * An EOA call succeeds with status "success" but produces no logs — we detect that.
+   */
+  async function waitAndVerifyTx(
+    hash: `0x${string}`,
+    expectLogs: boolean = false,
+  ): Promise<void> {
     setActiveTxHash(hash);
-    // Poll until the receipt appears (wagmi caches it internally)
-    return new Promise<void>((resolve, reject) => {
-      const interval = setInterval(async () => {
-        try {
-          const { data } = await refetchAllowance();
-          // We also check receipt presence by re-querying
-          // In practice wagmi will resolve useWaitForTransactionReceipt
-          // We give it a simple polling approach
-          clearInterval(interval);
-          resolve();
-        } catch (err) {
-          clearInterval(interval);
-          reject(err);
-        }
-      }, 2000);
 
-      // Safety timeout: 2 minutes
-      setTimeout(() => {
-        clearInterval(interval);
-        reject(new Error("Transaction confirmation timed out"));
-      }, 120_000);
+    const receipt = await waitForTransactionReceipt(wagmiConfig, {
+      hash,
+      confirmations: 1,
+      timeout: 120_000,
     });
+
+    if (receipt.status !== "success") {
+      throw new Error("Transaction failed on-chain");
+    }
+
+    // For invest/investETH calls, the contract must emit events.
+    // If there are no logs, the tx likely went to an EOA (no contract).
+    if (expectLogs && receipt.logs.length === 0) {
+      throw new Error(
+        "Transaction produced no events. The investment contract may not be deployed on this network. Please switch to Base mainnet.",
+      );
+    }
   }
 
   // ── Main invest function ─────────────────────────────────────
@@ -145,8 +143,8 @@ export function useInvestment(): UseInvestmentReturn {
           setActiveTxHash(hash);
           setState("waitingInvestment");
 
-          // Wait for confirmation
-          await waitForTx(hash);
+          // Wait for confirmation and verify contract execution
+          await waitAndVerifyTx(hash, true);
           setState("success");
         } else {
           // ── ERC-20 path: approve → invest ──────────────────
@@ -171,7 +169,8 @@ export function useInvestment(): UseInvestmentReturn {
             setActiveTxHash(approveHash);
             setState("waitingApproval");
 
-            await waitForTx(approveHash);
+            // Approval emits an Approval event
+            await waitAndVerifyTx(approveHash, true);
           }
 
           // Step 2: Invest
@@ -187,7 +186,8 @@ export function useInvestment(): UseInvestmentReturn {
           setActiveTxHash(investHash);
           setState("waitingInvestment");
 
-          await waitForTx(investHash);
+          // Invest must emit InvestmentMade + TransferSingle events
+          await waitAndVerifyTx(investHash, true);
           setState("success");
         }
       } catch (err: unknown) {

@@ -27,7 +27,7 @@ export function WalletCheckStep({ onContinue, onBack }: WalletCheckStepProps) {
     setIsIOS(isIOSBrowser());
   }, []);
 
-  const isOnBase = chainId === BASE_CHAIN_ID || chainId === 84532;
+  const isOnBase = chainId === BASE_CHAIN_ID;
   const isReady = isConnected && isOnBase;
 
   // On mobile (not in a wallet's in-app browser), show direct deep links
