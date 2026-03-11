@@ -22,27 +22,6 @@ export function isIOSBrowser(): boolean {
   return /macintosh/.test(ua) && navigator.maxTouchPoints > 1;
 }
 
-/**
- * Build a URL that opens in the device's external/system browser
- * from within a wallet's in-app WebView.
- * Android: intent:// scheme forces the system browser.
- * iOS/fallback: regular https URL (best-effort).
- */
-export function getExternalBrowserUrl(url: string): string {
-  if (typeof window === "undefined") return url;
-  const ua = navigator.userAgent.toLowerCase();
-  // Android: use intent:// to break out of WebView into system browser
-  if (/android/.test(ua)) {
-    try {
-      const parsed = new URL(url);
-      return `intent://${parsed.host}${parsed.pathname}${parsed.search}${parsed.hash}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
-    } catch {
-      return url;
-    }
-  }
-  return url;
-}
-
 /** Detect if running on a mobile device (phone or tablet) */
 export function isMobileBrowser(): boolean {
   if (typeof window === "undefined") return false;

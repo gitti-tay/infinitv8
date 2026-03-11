@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { isInAppBrowser, getExternalBrowserUrl } from "@/lib/detect-browser";
+import { isInAppBrowser } from "@/lib/detect-browser";
 
 function getPasswordStrength(password: string): {
   level: number;
@@ -466,14 +466,7 @@ export default function SignUpPage() {
           {/* Google OAuth — hidden in wallet in-app browsers */}
           {inAppBrowser ? (
             <div className="w-full py-3 px-4 rounded-lg text-sm text-center border border-amber/20 bg-amber/[0.06] text-text-secondary">
-              <p className="mb-2">Google sign-up is not available in wallet browsers.</p>
-              <a
-                href={typeof window !== "undefined" ? getExternalBrowserUrl(window.location.href) : "#"}
-                className="inline-flex items-center gap-1.5 text-primary-light font-semibold hover:underline"
-              >
-                <span className="material-symbols-outlined text-base">open_in_new</span>
-                Open in system browser
-              </a>
+              <p>Google sign-up is not available in wallet browsers.</p>
             </div>
           ) : (
             <button
