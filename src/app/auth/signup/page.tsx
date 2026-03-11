@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { isInAppBrowser } from "@/lib/detect-browser";
+import { isInAppBrowser, getExternalBrowserUrl } from "@/lib/detect-browser";
 
 function getPasswordStrength(password: string): {
   level: number;
@@ -12,7 +12,7 @@ function getPasswordStrength(password: string): {
   barColors: string[];
 } {
   let score = 0;
-  if (password.length >= 8) score++;
+  if (password.length >= 10) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
@@ -68,8 +68,13 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (password.length < 10) {
+      setError("Password must be at least 10 characters");
+      return;
+    }
+
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(password)) {
+      setError("Password must contain uppercase, lowercase, digit, and special character");
       return;
     }
 
@@ -323,9 +328,9 @@ export default function SignUpPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-background-secondary border border-border rounded-lg pl-10 pr-11 py-3 text-sm text-text-primary placeholder:text-text-muted outline-none transition-all focus:border-primary focus:ring-[3px] focus:ring-primary/10"
-                  placeholder="Min 8 characters"
+                  placeholder="Min 10 characters"
                   required
-                  minLength={8}
+                  minLength={10}
                 />
                 <button
                   type="button"
@@ -463,9 +468,7 @@ export default function SignUpPage() {
             <div className="w-full py-3 px-4 rounded-lg text-sm text-center border border-amber/20 bg-amber/[0.06] text-text-secondary">
               <p className="mb-2">Google sign-up is not available in wallet browsers.</p>
               <a
-                href={typeof window !== "undefined" ? window.location.href : "#"}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={typeof window !== "undefined" ? getExternalBrowserUrl(window.location.href) : "#"}
                 className="inline-flex items-center gap-1.5 text-primary-light font-semibold hover:underline"
               >
                 <span className="material-symbols-outlined text-base">open_in_new</span>
