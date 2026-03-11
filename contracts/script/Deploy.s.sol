@@ -26,9 +26,18 @@ contract DeployScript is Script {
         token.setEthPrice(ethPrice);
         token.setEthAccepted(true);
 
+        // Configure projects (chainProjectId must match database seed)
+        // All amounts in 6 decimals: $5 min = 5_000_000
+        token.configureProject(1, 5_000_000,  5_000_000_000_000, true);  // SPPS: $5M target
+        token.configureProject(2, 5_000_000,  8_000_000_000_000, true);  // MDD:  $8M target
+        token.configureProject(3, 5_000_000,  4_000_000_000_000, true);  // KBB:  $4M target
+        token.configureProject(4, 5_000_000, 12_000_000_000_000, true);  // WRP: $12M target
+        token.configureProject(5, 5_000_000, 10_000_000_000_000, true);  // REI: $10M target
+
         vm.stopBroadcast();
 
         console.log("INFINITV8Investment deployed at:", address(token));
         console.log("Treasury:", treasury);
+        console.log("5 projects configured (SPPS, MDD, KBB, WRP, REI)");
     }
 }

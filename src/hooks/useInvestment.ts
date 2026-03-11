@@ -191,8 +191,26 @@ export function useInvestment(): UseInvestmentReturn {
           setState("success");
         }
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : "Transaction failed";
+        let message = "Transaction failed";
+        if (err instanceof Error) {
+          // Surface contract revert reasons for common cases
+          const msg = err.message;
+          if (msg.includes("Project not active")) {
+            message = "This project is not yet active on-chain. Please contact support.";
+          } else if (msg.includes("Below minimum")) {
+            message = "Investment amount is below the project minimum.";
+          } else if (msg.includes("Exceeds target")) {
+            message = "This investment would exceed the project's fundraising target.";
+          } else if (msg.includes("Token not accepted")) {
+            message = "This payment token is not accepted. Try USDC or USDT.";
+          } else if (msg.includes("ETH not accepted")) {
+            message = "ETH payments are not currently accepted.";
+          } else if (msg.includes("User rejected") || msg.includes("user rejected")) {
+            message = "Transaction was rejected in your wallet.";
+          } else {
+            message = msg;
+          }
+        }
         setError(message);
         setState("error");
       }
