@@ -22,7 +22,7 @@ export default async function ProtectedLayout({
           userName={session.user.name || session.user.email || "User"}
           userEmail={session.user.email || ""}
         />
-        <main className="md:ml-64 min-h-screen pb-20 md:pb-0">
+        <main className="md:ml-[240px] min-h-screen pb-20 md:pb-0">
           {children}
         </main>
         <BottomNav />

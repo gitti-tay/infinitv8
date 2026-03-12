@@ -3,38 +3,63 @@ import { LandingNav } from "@/components/ui/landing-nav";
 
 /* ---------- data ---------- */
 const STATS = [
-  { value: "5", label: "Live Projects", color: "text-text-primary" },
-  { value: "Up to 15%", label: "APY Returns", color: "text-accent-light" },
-  { value: "$5", label: "Min. Investment", color: "text-primary-light" },
-  { value: "Base", label: "Blockchain", color: "text-text-primary" },
+  { value: "5", label: "Live Projects" },
+  { value: "15%", label: "Up to APY" },
+  { value: "$5", label: "Min. Investment" },
+  { value: "188", label: "Active Investors" },
 ];
 
-const FEATURES: { icon: string; title: string; desc: string; color: string }[] = [
-  { icon: "token", title: "Fractional Tokenization", desc: "Own fractions of premium assets starting from just $5. Each token represents verified ownership backed by legal documentation and on-chain proof.", color: "bg-primary/10 text-primary-light" },
-  { icon: "monitoring", title: "Real-Time Asset Monitoring", desc: "Track occupancy rates, revenue streams, and asset valuations in real-time. Live dashboards with institutional-grade data feeds.", color: "bg-accent/10 text-accent-light" },
-  { icon: "payments", title: "Automated Yield Distribution", desc: "Smart contract-powered yield payouts -- monthly or quarterly. Track every payment with full transparency and on-chain verification.", color: "bg-purple/10 text-purple" },
-  { icon: "verified_user", title: "KYC/AML Compliance", desc: "Institutional-grade identity verification with real-time AML screening, PEP checks, and sanctions list monitoring.", color: "bg-amber/10 text-amber" },
-  { icon: "account_balance_wallet", title: "Multi-Chain Wallet", desc: "Connect MetaMask, Coinbase, or Trust Wallet. Support for Ethereum, Polygon, Arbitrum, Base, and Optimism networks.", color: "bg-cyan/10 text-cyan" },
-  { icon: "shield", title: "Asset-Backed Security", desc: "Every investment backed by tangible assets -- real estate, energy infrastructure, forestry. Full legal documentation and third-party audits.", color: "bg-destructive/10 text-destructive" },
+const FEATURES: { icon: string; title: string; desc: string; accent: string }[] = [
+  { icon: "token", title: "Fractional Tokenization", desc: "Own fractions of premium assets starting from just $5. Each token represents verified on-chain ownership.", accent: "primary" },
+  { icon: "monitoring", title: "Real-Time Monitoring", desc: "Track revenue streams and asset valuations in real-time with institutional-grade data feeds.", accent: "accent" },
+  { icon: "payments", title: "Automated Yield", desc: "Smart contract-powered yield payouts distributed monthly or quarterly with full transparency.", accent: "purple" },
+  { icon: "verified_user", title: "KYC/AML Compliance", desc: "Institutional-grade identity verification with real-time AML screening and sanctions monitoring.", accent: "amber" },
+  { icon: "account_balance_wallet", title: "Multi-Wallet Support", desc: "Connect MetaMask, Coinbase, or Trust Wallet. Pay with USDC, USDT, or ETH on Base.", accent: "cyan" },
+  { icon: "shield", title: "Asset-Backed Security", desc: "Every investment backed by tangible assets with full legal documentation and third-party audits.", accent: "destructive" },
 ];
 
 const STEPS = [
-  { num: 1, title: "Create & Verify Account", desc: "Sign up in 60 seconds. Complete KYC verification with our streamlined 3-step process -- personal info, ID upload, and selfie verification. Approved within 24 hours." },
-  { num: 2, title: "Connect Your Wallet", desc: "Connect MetaMask, Coinbase Wallet, or Trust Wallet. Fund with USDC, USDT, or ETH on the Base network. No minimum deposit, no hidden fees." },
-  { num: 3, title: "Choose & Invest", desc: "Browse curated RWA projects with full due diligence reports. Select your investment plan -- Flexible, Standard, or Premium -- and confirm with bank-level encryption." },
-  { num: 4, title: "Earn Yield & Track", desc: "Receive automated yield payouts monthly or quarterly. Monitor asset performance, occupancy rates, and your portfolio growth in real-time from your dashboard." },
+  { num: 1, title: "Create Account", desc: "Sign up in 60 seconds. Complete KYC with our streamlined 3-step verification process.", icon: "person_add" },
+  { num: 2, title: "Connect Wallet", desc: "Connect MetaMask, Coinbase, or Trust Wallet. Fund with USDC, USDT, or ETH on Base.", icon: "account_balance_wallet" },
+  { num: 3, title: "Choose & Invest", desc: "Browse curated RWA projects with due diligence reports. Select your plan and invest.", icon: "trending_up" },
+  { num: 4, title: "Earn Yield", desc: "Receive automated payouts monthly or quarterly. Track portfolio growth in real-time.", icon: "payments" },
 ];
 
-const SECURITY = [
-  { icon: "encrypted", title: "Bank-Level Encryption", desc: "AES-256 encryption for all data at rest and TLS 1.3 for data in transit." },
-  { icon: "fingerprint", title: "Biometric Authentication", desc: "Face ID and fingerprint login with hardware-level secure enclave storage." },
-  { icon: "gavel", title: "Regulatory Compliance", desc: "KYC/AML verification, PEP screening, and sanctions monitoring for all users." },
-  { icon: "account_balance", title: "Segregated Custody", desc: "Client assets held in segregated accounts, never commingled with platform funds." },
-  { icon: "description", title: "Third-Party Audits", desc: "Independent audits of all underlying assets with published reports and on-chain verification." },
-  { icon: "dns", title: "Smart Contract Audits", desc: "Audited smart contracts across all 5 supported blockchain networks." },
+const ASSET_CLASSES = [
+  { icon: "apartment", label: "Real Estate", desc: "Premium income-generating properties", apy: "10.5%", color: "purple" },
+  { icon: "agriculture", label: "Agriculture", desc: "Sustainable farming operations", apy: "12.0%", color: "accent" },
+  { icon: "medical_services", label: "Healthcare", desc: "Medical device & clinic networks", apy: "14.5%", color: "primary" },
+  { icon: "inventory_2", label: "Commodities", desc: "Waste recovery & energy infrastructure", apy: "15.0%", color: "amber" },
 ];
 
-const NETWORKS = ["Ethereum", "Polygon", "Arbitrum", "Base", "Optimism"];
+const TRUST_BADGES = [
+  { icon: "encrypted", label: "AES-256 Encryption" },
+  { icon: "fingerprint", label: "Biometric Auth" },
+  { icon: "gavel", label: "KYC/AML Verified" },
+  { icon: "account_balance", label: "Segregated Custody" },
+  { icon: "description", label: "Third-Party Audited" },
+  { icon: "dns", label: "Smart Contract Audited" },
+];
+
+const PROJECTS = [
+  { sym: "SPPS", name: "Smart Produce Supply", cat: "Agriculture", loc: "Chiang Mai", apy: 12.0, raised: 1200000, target: 5000000, investors: 34 },
+  { sym: "MDD", name: "re:H Medical Device Distribution", cat: "Healthcare", loc: "Bangkok", apy: 11.8, raised: 800000, target: 8000000, investors: 18 },
+  { sym: "KBB", name: "K-Beauty Clinic Bangkok", cat: "Healthcare", loc: "Sukhumvit", apy: 14.5, raised: 600000, target: 4000000, investors: 22 },
+  { sym: "WRP", name: "Waste Recovery Plant", cat: "Commodities", loc: "Eastern Seaboard", apy: 15.0, raised: 2040000, target: 12000000, investors: 28 },
+  { sym: "REI", name: "Prime City Real Estate Income", cat: "Real Estate", loc: "Bangkok", apy: 10.5, raised: 3500000, target: 10000000, investors: 86 },
+];
+
+function accentClasses(accent: string) {
+  const map: Record<string, string> = {
+    primary: "bg-primary/8 text-primary dark:bg-primary/15 dark:text-primary-light",
+    accent: "bg-accent/8 text-accent-dark dark:bg-accent/15 dark:text-accent-light",
+    purple: "bg-purple/8 text-purple dark:bg-purple/15 dark:text-purple",
+    amber: "bg-amber/8 text-amber-dark dark:bg-amber/15 dark:text-amber",
+    cyan: "bg-cyan/8 text-cyan dark:bg-cyan/15 dark:text-cyan",
+    destructive: "bg-destructive/8 text-destructive dark:bg-destructive/15 dark:text-destructive",
+  };
+  return map[accent] ?? map.primary;
+}
 
 /* ---------- page ---------- */
 export default function LandingPage() {
@@ -43,114 +68,126 @@ export default function LandingPage() {
       <LandingNav />
 
       {/* ===== HERO ===== */}
-      <section className="relative min-h-screen flex items-center pt-28 pb-20 overflow-hidden">
-        {/* Background effects */}
+      <section className="relative min-h-[90vh] flex items-center pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
+        {/* Background — subtle gradient orbs */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[20%] left-[30%] w-[500px] h-[500px] bg-primary/[0.06] rounded-full blur-3xl" />
-          <div className="absolute bottom-[20%] right-[30%] w-[400px] h-[400px] bg-purple/[0.05] rounded-full blur-3xl" />
-          <div className="absolute top-[50%] left-[50%] w-[300px] h-[300px] bg-accent/[0.03] rounded-full blur-3xl" />
+          <div className="absolute top-[15%] left-[20%] w-[600px] h-[600px] bg-primary/[0.04] dark:bg-primary/[0.08] rounded-full blur-[100px]" />
+          <div className="absolute bottom-[10%] right-[15%] w-[500px] h-[500px] bg-purple/[0.03] dark:bg-purple/[0.06] rounded-full blur-[100px]" />
         </div>
-        {/* Grid overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-30"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
 
-        <div className="relative z-10 max-w-[1280px] mx-auto px-6 w-full">
-          <div className="max-w-[680px]">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium text-primary-light mb-6">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              Live &mdash; Regulated RWA Platform
+        <div className="relative z-10 max-w-[1200px] mx-auto px-6 w-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left — Copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 glass rounded-full text-[13px] font-medium text-primary mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-glow" />
+                Live on Base Mainnet
+              </div>
+
+              <h1 className="text-[2.75rem] sm:text-[3.25rem] lg:text-[3.75rem] font-bold leading-[1.08] tracking-[-0.03em] mb-6">
+                Invest in{" "}
+                <span className="gradient-text">Real World Assets</span>
+                <br />
+                Starting at $5
+              </h1>
+
+              <p className="text-lg text-text-secondary leading-relaxed mb-10 max-w-[520px]">
+                Access fractional ownership in premium real estate, agriculture,
+                healthcare, and energy. Earn 10&ndash;15% APY backed by real,
+                auditable assets on-chain.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 mb-12">
+                <Link
+                  href="/auth/signup"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-[15px] font-semibold bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl shadow-glow hover:shadow-glow-lg transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                >
+                  Start Investing
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </Link>
+                <a
+                  href="#assets"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-[15px] font-semibold border border-border text-text-secondary rounded-xl hover:border-primary/40 hover:text-primary transition-all"
+                >
+                  Explore Assets
+                </a>
+              </div>
+
+              {/* Stats row */}
+              <div className="flex gap-8 sm:gap-12">
+                {STATS.map((s) => (
+                  <div key={s.label}>
+                    <span className="text-2xl lg:text-3xl font-bold tracking-tight tabular-nums text-text-primary">
+                      {s.value}
+                    </span>
+                    <span className="block text-xs text-text-muted mt-0.5">{s.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[64px] font-extrabold leading-[1.05] tracking-[-2px] mb-6">
-              Institutional-Grade
-              <br />
-              <span className="bg-gradient-to-br from-primary-light to-primary-lighter bg-clip-text text-transparent">
-                Real World Assets
-              </span>
-              <br />
-              For{" "}
-              <span className="bg-gradient-to-br from-accent-light to-[#6ee7b7] bg-clip-text text-transparent">
-                Everyone
-              </span>
-            </h1>
-
-            {/* Subheading */}
-            <p className="text-lg text-text-tertiary leading-relaxed mb-10 max-w-[560px]">
-              Access fractional ownership in premium real estate, sustainable
-              agriculture, clean energy, and healthcare &mdash; starting from
-              just $5. Earn 10&ndash;15% APY backed by real, auditable assets.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link
-                href="/investments"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold bg-primary text-white rounded shadow-glow hover:bg-primary-dark transition-all hover:-translate-y-0.5"
-              >
-                Start Investing
-                <span className="material-symbols-outlined text-lg">arrow_forward</span>
-              </Link>
-              <a
-                href="#assets"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold border border-border-light text-text-secondary rounded hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
-              >
-                Explore Assets
-                <span className="material-symbols-outlined text-lg">explore</span>
-              </a>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-12">
-              {STATS.map((s) => (
-                <div key={s.label} className="flex flex-col">
-                  <span className={`text-2xl lg:text-[28px] font-extrabold tracking-tight ${s.color}`}>
-                    {s.value}
-                  </span>
-                  <span className="text-xs text-text-muted mt-0.5">{s.label}</span>
-                </div>
-              ))}
+            {/* Right — Asset class preview cards */}
+            <div className="hidden lg:block relative">
+              <div className="grid grid-cols-2 gap-4">
+                {ASSET_CLASSES.map((a, i) => (
+                  <div
+                    key={a.label}
+                    className={`glass rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-medium ${i === 0 ? "translate-y-6" : i === 3 ? "translate-y-6" : ""}`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl bg-${a.color}/10 dark:bg-${a.color}/20 flex items-center justify-center mb-3`}>
+                      <span className={`material-symbols-outlined text-${a.color} text-xl`}>{a.icon}</span>
+                    </div>
+                    <h4 className="text-sm font-semibold mb-0.5">{a.label}</h4>
+                    <p className="text-xs text-text-muted mb-3">{a.desc}</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-xl font-bold tabular-nums text-accent">{a.apy}</span>
+                      <span className="text-xs text-text-muted">APY</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ===== SOCIAL PROOF BAR ===== */}
+      <section className="border-y border-border bg-background-secondary">
+        <div className="max-w-[1200px] mx-auto px-6 py-5">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-text-muted">
+            <span>Powered by <strong className="text-text-primary">Base</strong> (Coinbase L2)</span>
+            <span className="hidden sm:inline text-border">|</span>
+            <span><strong className="text-text-primary">ERC-1155</strong> tokenized positions</span>
+            <span className="hidden sm:inline text-border">|</span>
+            <span>Smart contracts <strong className="text-accent">verified</strong> on Basescan</span>
+          </div>
+        </div>
+      </section>
+
       {/* ===== FEATURES ===== */}
-      <section id="features" className="py-16 lg:py-24">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/15 rounded-full text-xs font-semibold text-primary-light uppercase tracking-wider mb-4">
-              <span className="material-symbols-outlined text-sm">auto_awesome</span>
-              Platform Features
-            </div>
-            <h2 className="text-3xl lg:text-[40px] font-extrabold tracking-tight leading-tight mb-4">
-              Built for Institutional-Grade
-              <br />
-              RWA Investment
+      <section id="features" className="py-20 lg:py-28">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Platform Features</p>
+            <h2 className="text-3xl lg:text-[2.5rem] font-bold tracking-tight leading-tight mb-4">
+              Built for Institutional-Grade RWA
             </h2>
-            <p className="text-base text-text-tertiary max-w-[600px] mx-auto leading-relaxed">
-              Every feature designed specifically for tokenized real-world asset
-              investment &mdash; from due diligence to yield distribution.
+            <p className="text-base text-text-tertiary max-w-[560px] mx-auto leading-relaxed">
+              Every feature designed for tokenized real-world asset investment &mdash;
+              from due diligence to yield distribution.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="bg-card border border-border rounded-lg p-8 transition-all hover:border-border-light hover:-translate-y-1 hover:shadow-medium"
+                className="group bg-card border border-border rounded-xl p-6 transition-all hover:border-primary/20 hover:-translate-y-0.5 hover:shadow-medium"
               >
-                <div className={`w-[52px] h-[52px] rounded flex items-center justify-center mb-5 ${f.color}`}>
-                  <span className="material-symbols-outlined text-2xl">{f.icon}</span>
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${accentClasses(f.accent)}`}>
+                  <span className="material-symbols-outlined text-xl">{f.icon}</span>
                 </div>
-                <h4 className="font-semibold mb-2">{f.title}</h4>
+                <h4 className="font-semibold mb-1.5 text-[15px]">{f.title}</h4>
                 <p className="text-sm text-text-tertiary leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -158,85 +195,79 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== ASSET CLASSES (placeholder anchor) ===== */}
-      <section id="assets" className="py-16 lg:py-24 bg-background-secondary">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/15 rounded-full text-xs font-semibold text-primary-light uppercase tracking-wider mb-4">
-              <span className="material-symbols-outlined text-sm">apartment</span>
-              RWA Asset Classes
+      {/* ===== ASSET CLASSES ===== */}
+      <section id="assets" className="py-20 lg:py-28 bg-background-secondary">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-12">
+            <div>
+              <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">RWA Asset Classes</p>
+              <h2 className="text-3xl lg:text-[2.5rem] font-bold tracking-tight leading-tight mb-3">
+                Tokenized Real World Assets
+              </h2>
+              <p className="text-base text-text-tertiary max-w-[520px] leading-relaxed">
+                Diversify across premium asset classes &mdash; each backed by real
+                revenue-generating properties and independently audited.
+              </p>
             </div>
-            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-              <div>
-                <h2 className="text-3xl lg:text-[40px] font-extrabold tracking-tight leading-tight mb-4">
-                  Tokenized Real World Assets
-                </h2>
-                <p className="text-base text-text-tertiary max-w-[600px] leading-relaxed">
-                  Diversify across premium asset classes &mdash; each backed by real
-                  revenue-generating properties and independently audited.
-                </p>
-              </div>
-              <Link
-                href="/investments"
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-primary text-white rounded-sm shadow-glow hover:bg-primary-dark transition-colors self-start lg:self-auto"
-              >
-                View All Projects
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
-              </Link>
-            </div>
+            <Link
+              href="/investments"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-primary text-white rounded-lg shadow-glow hover:bg-primary-dark transition-all self-start lg:self-auto"
+            >
+              View All Projects
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
+            </Link>
           </div>
 
-          {/* 5 project cards -- hardcoded from existing DB projects */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { sym: "SPPS", name: "Smart Produce Supply", cat: "Agriculture", loc: "Chiang Mai, Thailand", apy: 12.0, min: 5, risk: "Medium", raised: 1200000, target: 5000000, investors: 34 },
-              { sym: "MDD", name: "re:H Medical Device Distribution", cat: "Healthcare", loc: "Bangkok, Thailand", apy: 11.8, min: 5, risk: "Medium", raised: 800000, target: 8000000, investors: 18 },
-              { sym: "KBB", name: "K-Beauty Clinic Bangkok", cat: "Healthcare", loc: "Sukhumvit, Bangkok", apy: 14.5, min: 5, risk: "Medium", raised: 600000, target: 4000000, investors: 22 },
-              { sym: "WRP", name: "Waste Recovery Plant", cat: "Commodities", loc: "Eastern Seaboard, Thailand", apy: 15.0, min: 5, risk: "Medium", raised: 2040000, target: 12000000, investors: 28 },
-              { sym: "REI", name: "Prime City Real Estate Income", cat: "Real Estate", loc: "Bangkok & Chiang Mai", apy: 10.5, min: 5, risk: "Low", raised: 3500000, target: 10000000, investors: 86 },
-            ].map((p) => {
+          {/* Project cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {PROJECTS.map((p) => {
               const pct = ((p.raised / p.target) * 100).toFixed(1);
               const fmtRaised = p.raised >= 1e6 ? `$${(p.raised / 1e6).toFixed(1)}M` : `$${(p.raised / 1e3).toFixed(0)}K`;
               const fmtTarget = p.target >= 1e6 ? `$${(p.target / 1e6).toFixed(0)}M` : `$${(p.target / 1e3).toFixed(0)}K`;
-              const riskColor = p.risk === "Low" ? "bg-accent/15 text-accent-light" : p.risk === "Medium" ? "bg-amber/15 text-amber" : "bg-destructive/15 text-destructive";
               return (
-                <div key={p.sym} className="bg-card border border-border rounded-lg overflow-hidden transition-all hover:border-border-light hover:-translate-y-1 hover:shadow-medium">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-text-primary">{p.name}</span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${riskColor}`}>
-                        {p.risk}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-background-tertiary text-text-tertiary border border-border">{p.sym}</span>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-background-tertiary text-text-tertiary border border-border">{p.cat}</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-background-tertiary text-text-tertiary border border-border">
-                        <span className="material-symbols-outlined text-xs">location_on</span>
-                        {p.loc.split(",")[0]}
-                      </span>
-                    </div>
-                    {/* Progress bar */}
-                    <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden mb-2">
-                      <div className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-text-muted mb-4">
-                      <span>{fmtRaised} raised</span>
-                      <span>{pct}% of {fmtTarget}</span>
-                    </div>
-                    {/* Metrics */}
-                    <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
-                      <div className="text-center">
-                        <div className="text-base font-bold font-mono text-accent-light">{p.apy}%</div>
-                        <div className="text-[11px] text-text-muted mt-0.5">APY</div>
+                <div key={p.sym} className="bg-card border border-border rounded-xl overflow-hidden transition-all hover:border-primary/20 hover:-translate-y-0.5 hover:shadow-medium group">
+                  {/* Card header gradient */}
+                  <div className="h-1.5 bg-gradient-to-r from-primary via-purple to-accent" />
+                  <div className="p-5">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-text-primary truncate">{p.name}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[11px] font-semibold text-primary bg-primary/8 dark:bg-primary/15 px-1.5 py-0.5 rounded">{p.sym}</span>
+                          <span className="text-[11px] text-text-muted">{p.cat}</span>
+                          <span className="text-[11px] text-text-muted flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[10px]">location_on</span>
+                            {p.loc}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-base font-bold font-mono text-text-primary">${p.min}</div>
-                        <div className="text-[11px] text-text-muted mt-0.5">Min. Invest</div>
+                      <span className="text-xl font-bold tabular-nums text-accent">{p.apy}%</span>
+                    </div>
+
+                    {/* Progress */}
+                    <div className="mt-4">
+                      <div className="h-1 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
-                      <div className="text-center">
-                        <div className="text-base font-bold font-mono text-primary-light">{p.investors}</div>
-                        <div className="text-[11px] text-text-muted mt-0.5">Investors</div>
+                      <div className="flex justify-between text-[11px] text-text-muted mt-1.5">
+                        <span>{fmtRaised} raised</span>
+                        <span>{pct}% of {fmtTarget}</span>
+                      </div>
+                    </div>
+
+                    {/* Metrics row */}
+                    <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-border text-center">
+                      <div>
+                        <div className="text-sm font-bold tabular-nums text-accent">{p.apy}%</div>
+                        <div className="text-[10px] text-text-muted">APY</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold tabular-nums">$5</div>
+                        <div className="text-[10px] text-text-muted">Min.</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold tabular-nums text-primary">{p.investors}</div>
+                        <div className="text-[10px] text-text-muted">Investors</div>
                       </div>
                     </div>
                   </div>
@@ -248,68 +279,63 @@ export default function LandingPage() {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section id="how-it-works" className="py-16 lg:py-24">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/15 rounded-full text-xs font-semibold text-primary-light uppercase tracking-wider mb-4">
-              <span className="material-symbols-outlined text-sm">route</span>
-              How It Works
-            </div>
-            <h2 className="text-3xl lg:text-[40px] font-extrabold tracking-tight leading-tight mb-4">
+      <section id="how-it-works" className="py-20 lg:py-28">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">How It Works</p>
+            <h2 className="text-3xl lg:text-[2.5rem] font-bold tracking-tight leading-tight mb-4">
               Start Investing in 4 Steps
             </h2>
-            <p className="text-base text-text-tertiary max-w-[600px] mx-auto leading-relaxed">
-              From account creation to your first yield payout &mdash; everything
-              is designed to be intuitive, secure, and transparent.
+            <p className="text-base text-text-tertiary max-w-[520px] mx-auto leading-relaxed">
+              From account creation to your first yield payout &mdash;
+              intuitive, secure, and transparent.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Horizontal stepper on desktop, vertical on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {STEPS.map((s) => (
-              <div
-                key={s.num}
-                className="flex gap-6 p-8 rounded-lg border border-border bg-card transition-all hover:border-primary hover:shadow-glow"
-              >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-purple flex items-center justify-center text-xl font-extrabold text-white shrink-0">
-                  {s.num}
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">{s.title}</h4>
+              <div key={s.num} className="relative group">
+                <div className="bg-card border border-border rounded-xl p-6 transition-all hover:border-primary/20 hover:shadow-medium h-full">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple flex items-center justify-center text-base font-bold text-white mb-4">
+                    {s.num}
+                  </div>
+                  <h4 className="font-semibold text-[15px] mb-2">{s.title}</h4>
                   <p className="text-sm text-text-tertiary leading-relaxed">{s.desc}</p>
                 </div>
+                {/* Connector line (desktop only, not on last item) */}
+                {s.num < 4 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-3 w-6 border-t border-dashed border-border" />
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== SECURITY & COMPLIANCE ===== */}
-      <section id="security" className="py-16 lg:py-24 bg-background-secondary">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/15 rounded-full text-xs font-semibold text-primary-light uppercase tracking-wider mb-4">
-              <span className="material-symbols-outlined text-sm">security</span>
-              Security & Compliance
-            </div>
-            <h2 className="text-3xl lg:text-[40px] font-extrabold tracking-tight leading-tight mb-4">
+      {/* ===== SECURITY & TRUST ===== */}
+      <section id="security" className="py-20 lg:py-28 bg-background-secondary">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Security & Compliance</p>
+            <h2 className="text-3xl lg:text-[2.5rem] font-bold tracking-tight leading-tight mb-4">
               Institutional-Grade Security
             </h2>
-            <p className="text-base text-text-tertiary max-w-[600px] mx-auto leading-relaxed">
+            <p className="text-base text-text-tertiary max-w-[520px] mx-auto leading-relaxed">
               Your assets are protected by multiple layers of security &mdash;
               from bank-level encryption to regulatory compliance.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SECURITY.map((s) => (
-              <div key={s.title} className="flex gap-4 p-6 rounded border border-border bg-card">
-                <div className="w-11 h-11 rounded-[10px] flex items-center justify-center bg-accent/10 text-accent-light shrink-0">
-                  <span className="material-symbols-outlined text-xl">{s.icon}</span>
-                </div>
-                <div>
-                  <h5 className="font-semibold mb-1 text-sm">{s.title}</h5>
-                  <p className="text-xs text-text-tertiary leading-relaxed">{s.desc}</p>
-                </div>
+          {/* Trust badges — horizontal pill strip */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {TRUST_BADGES.map((b) => (
+              <div
+                key={b.label}
+                className="inline-flex items-center gap-2.5 px-5 py-3 glass rounded-xl transition-all hover:shadow-medium hover:-translate-y-0.5"
+              >
+                <span className="material-symbols-outlined text-primary text-lg">{b.icon}</span>
+                <span className="text-sm font-medium text-text-secondary">{b.label}</span>
               </div>
             ))}
           </div>
@@ -317,53 +343,53 @@ export default function LandingPage() {
       </section>
 
       {/* ===== SUPPORTED NETWORKS ===== */}
-      <section className="py-16 lg:py-24">
-        <div className="max-w-[1280px] mx-auto px-6 text-center">
-          <p className="text-xs uppercase text-text-muted tracking-[3px] mb-8 font-semibold">
+      <section className="py-12 border-b border-border">
+        <div className="max-w-[1200px] mx-auto px-6 text-center">
+          <p className="text-[11px] uppercase text-text-muted tracking-[3px] mb-6 font-medium">
             Supported Networks & Standards
           </p>
-          <div className="flex items-center justify-center gap-8 sm:gap-10 flex-wrap opacity-50">
-            {NETWORKS.map((n) => (
-              <span key={n} className="text-lg sm:text-xl font-semibold text-text-muted">{n}</span>
+          <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
+            {["Ethereum", "Polygon", "Arbitrum", "Base", "Optimism"].map((n) => (
+              <span key={n} className="text-base sm:text-lg font-semibold text-text-muted/60">{n}</span>
             ))}
           </div>
         </div>
       </section>
 
       {/* ===== CTA ===== */}
-      <section className="py-16 lg:py-24">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="relative bg-gradient-to-br from-primary/15 to-purple/10 border border-primary/20 rounded-xl sm:rounded-2xl p-10 sm:p-20 text-center overflow-hidden">
-            {/* Glow */}
+      <section className="py-20 lg:py-28">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="relative glass rounded-2xl p-12 sm:p-16 lg:p-20 text-center overflow-hidden">
+            {/* Gradient background */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-primary/15 rounded-full blur-3xl" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-gradient-to-b from-primary/10 to-transparent rounded-full blur-3xl" />
             </div>
             <div className="relative z-10">
-              <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-extrabold tracking-tight leading-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-[2.5rem] font-bold tracking-tight leading-tight mb-4">
                 Start Building Your
                 <br />
-                RWA Portfolio Today
+                <span className="gradient-text">RWA Portfolio</span> Today
               </h2>
-              <p className="text-base text-text-tertiary max-w-[500px] mx-auto mb-8 leading-relaxed">
+              <p className="text-base text-text-tertiary max-w-[460px] mx-auto mb-8 leading-relaxed">
                 Earn institutional-grade returns on tokenized real-world
                 assets. Invest from as little as $5.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
-                  href="/investments"
-                  className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold bg-primary text-white rounded shadow-glow hover:bg-primary-dark transition-all hover:-translate-y-0.5"
+                  href="/auth/signup"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-semibold bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl shadow-glow hover:shadow-glow-lg transition-all hover:-translate-y-0.5"
                 >
                   Create Free Account
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
                 </Link>
                 <a
                   href="#assets"
-                  className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold border border-border-light text-text-secondary rounded hover:border-primary hover:text-primary transition-colors"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-semibold border border-border text-text-secondary rounded-xl hover:border-primary/40 hover:text-primary transition-all"
                 >
                   View Assets
                 </a>
               </div>
-              <p className="text-xs text-text-muted mt-4">
+              <p className="text-xs text-text-muted mt-5">
                 No credit card required &bull; KYC verification in 24 hours
               </p>
             </div>
@@ -372,57 +398,53 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="bg-background-secondary border-t border-border pt-16 pb-8">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+      <footer className="bg-background-secondary border-t border-border pt-14 pb-8">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
             {/* Brand */}
-            <div className="lg:col-span-1 max-w-[320px]">
-              <Link href="/" className="flex items-center gap-2.5 font-extrabold text-xl tracking-tight mb-4">
-                <div className="w-9 h-9 bg-gradient-to-br from-primary to-purple rounded-[10px] flex items-center justify-center text-white text-lg font-black">
+            <div className="lg:col-span-1 max-w-[280px]">
+              <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple rounded-lg flex items-center justify-center text-white text-base font-black">
                   &infin;
                 </div>
                 <span className="text-text-primary">
-                  INFINIT<span className="text-primary-light">V8</span>
+                  INFINIT<span className="text-primary">V8</span>
                 </span>
               </Link>
-              <p className="text-sm text-text-tertiary mb-4 leading-relaxed">
+              <p className="text-sm text-text-tertiary leading-relaxed">
                 Institutional-grade access to tokenized real-world assets.
-                Fractional ownership in premium real estate, agriculture, energy,
-                and private credit.
+                Fractional ownership starting at $5.
               </p>
-              <p className="text-xs text-text-muted">INFINITV8 Inc.</p>
             </div>
 
             {/* Platform */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[1.5px] text-text-muted mb-4">Platform</h4>
-              <nav className="flex flex-col gap-1">
+              <nav className="flex flex-col gap-0.5">
                 <Link href="/investments" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Marketplace</Link>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Portfolio Tracker</a>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Yield Calculator</a>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Asset Reports</a>
+                <Link href="/dashboard" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Dashboard</Link>
+                <Link href="/portfolio" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Portfolio</Link>
+                <Link href="/wallet" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Wallet</Link>
               </nav>
             </div>
 
             {/* Company */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[1.5px] text-text-muted mb-4">Company</h4>
-              <nav className="flex flex-col gap-1">
+              <nav className="flex flex-col gap-0.5">
                 <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">About Us</a>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Careers</a>
                 <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Blog & Research</a>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Contact</a>
+                <a href="mailto:info@infinitv8.com" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Contact</a>
               </nav>
             </div>
 
             {/* Legal */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[1.5px] text-text-muted mb-4">Legal</h4>
-              <nav className="flex flex-col gap-1">
+              <nav className="flex flex-col gap-0.5">
                 <Link href="/terms" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Terms of Service</Link>
                 <Link href="/privacy" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Privacy Policy</Link>
                 <Link href="/risk-disclosure" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Risk Disclosure</Link>
-                <a href="#" className="text-sm text-text-tertiary hover:text-text-primary transition-colors py-1">Cookie Policy</a>
               </nav>
             </div>
           </div>
@@ -430,8 +452,8 @@ export default function LandingPage() {
           {/* Bottom bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border gap-3 text-xs text-text-muted">
             <span>&copy; 2026 INFINITV8. All rights reserved.</span>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent/15 text-accent-light rounded-full text-[11px] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-[11px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-glow" />
               All Systems Operational
             </div>
           </div>

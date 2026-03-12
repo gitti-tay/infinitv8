@@ -47,7 +47,7 @@ function getStatusBadge(status: string) {
   switch (status) {
     case "CONFIRMED":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent-light rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent rounded-full">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
           Active
         </span>
@@ -235,24 +235,24 @@ export default async function PortfolioPage() {
   return (
     <>
       <Header title="Portfolio" showBack={false} />
-      <div className="pt-14 pb-24 md:pb-8 animate-fadeIn">
-        <div className="px-4 md:px-6 pt-4 space-y-6">
+      <div className="pb-24 md:pb-8 animate-fadeIn">
+        <div className="px-4 md:px-6 lg:px-8 pt-4 space-y-6 max-w-[1400px]">
           {/* ====================================================== */}
           {/*  1. Portfolio Hero Card                                 */}
           {/* ====================================================== */}
-          <div className="bg-gradient-to-br from-primary/[0.08] to-purple/[0.06] border border-primary/15 rounded-xl p-6 md:p-8 shadow-soft">
+          <div className="bg-gradient-to-br from-primary/[0.06] to-purple/[0.04] dark:from-primary/[0.12] dark:to-purple/[0.08] border border-border rounded-2xl p-6 md:p-8">
             <div className="flex flex-col lg:flex-row lg:items-center gap-8">
               {/* Left: value + metrics */}
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-text-muted uppercase tracking-widest mb-1">
                   Portfolio Value
                 </p>
-                <h2 className="text-4xl md:text-[44px] font-black tracking-tight font-mono text-text-primary leading-none mb-2">
+                <h2 className="text-4xl md:text-[44px] font-black tracking-tight tabular-nums text-text-primary leading-none mb-2">
                   ${formatCurrency(totalValue)}
                 </h2>
 
                 {totalYield > 0 && (
-                  <div className="flex items-center gap-2 text-accent-light font-semibold text-base">
+                  <div className="flex items-center gap-2 text-accent font-semibold text-base">
                     <span className="material-symbols-outlined text-lg">
                       trending_up
                     </span>
@@ -276,7 +276,7 @@ export default async function PortfolioPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold font-mono text-accent-light">
+                    <p className="text-xl font-bold font-mono text-accent">
                       ${formatCurrency(totalYield)}
                     </p>
                     <p className="text-xs text-text-muted mt-0.5">
@@ -320,7 +320,7 @@ export default async function PortfolioPage() {
             </h3>
 
             {investments.length === 0 ? (
-              <div className="bg-card border border-border rounded-xl p-6 shadow-soft text-center py-16">
+              <div className="bg-card border border-border rounded-2xl p-6 text-center py-16">
                 <span className="material-symbols-outlined text-4xl text-text-muted mb-3 block">
                   account_balance_wallet
                 </span>
@@ -387,7 +387,7 @@ export default async function PortfolioPage() {
                   return (
                     <div
                       key={investment.id}
-                      className="bg-card border border-border rounded-xl overflow-hidden shadow-soft hover:border-border-light transition-colors"
+                      className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-200"
                     >
                       {/* Card header */}
                       <div className="flex items-center gap-3 p-5 border-b border-border">
@@ -418,7 +418,7 @@ export default async function PortfolioPage() {
                           <p className="text-xl font-extrabold font-mono text-text-primary">
                             ${formatCurrency(currentValue)}
                           </p>
-                          <p className="text-xs font-semibold text-accent-light">
+                          <p className="text-xs font-semibold text-accent">
                             +{gainPercent}% ($
                             {formatCurrency(totalGain)})
                           </p>
@@ -438,7 +438,7 @@ export default async function PortfolioPage() {
                             </p>
                           </div>
                           <div className="text-center p-3 bg-background-tertiary rounded-lg">
-                            <p className="text-sm font-bold font-mono text-accent-light">
+                            <p className="text-sm font-bold font-mono text-accent">
                               {apy}%
                             </p>
                             <p className="text-[11px] text-text-muted mt-0.5">
@@ -446,7 +446,7 @@ export default async function PortfolioPage() {
                             </p>
                           </div>
                           <div className="text-center p-3 bg-background-tertiary rounded-lg">
-                            <p className="text-sm font-bold font-mono text-accent-light">
+                            <p className="text-sm font-bold font-mono text-accent">
                               ${formatCurrency(estYield)}
                             </p>
                             <p className="text-[11px] text-text-muted mt-0.5">
@@ -487,7 +487,7 @@ export default async function PortfolioPage() {
                         <div className="flex items-center gap-4 text-xs">
                           <span className="text-text-muted">
                             Next:{" "}
-                            <span className="text-accent-light font-bold font-mono">
+                            <span className="text-accent font-bold font-mono">
                               ${formatCurrency(monthlyPayout)}
                             </span>{" "}
                             on {fmtDate(nextPayout)}
@@ -515,12 +515,12 @@ export default async function PortfolioPage() {
           {confirmed.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Payout History */}
-              <div className="bg-card border border-border rounded-xl p-6 shadow-soft">
+              <div className="bg-card border border-border rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-base font-bold text-text-primary">
                     Payout History
                   </h4>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent-light rounded-full">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent rounded-full">
                     {paidPayouts.length} total payouts
                   </span>
                 </div>
@@ -555,10 +555,10 @@ export default async function PortfolioPage() {
                             {fmtDate(p.payoutDate)}
                           </p>
                         </div>
-                        <span className="text-sm font-bold font-mono text-accent-light">
+                        <span className="text-sm font-bold font-mono text-accent">
                           +${Number(p.amount).toFixed(2)}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent-light rounded-full">
+                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-accent/10 text-accent rounded-full">
                           Completed
                         </span>
                       </div>
@@ -568,7 +568,7 @@ export default async function PortfolioPage() {
               </div>
 
               {/* Yield Analytics */}
-              <div className="bg-card border border-border rounded-xl p-6 shadow-soft">
+              <div className="bg-card border border-border rounded-2xl p-6">
                 <h4 className="text-base font-bold text-text-primary mb-4">
                   Yield Analytics
                 </h4>
@@ -577,7 +577,7 @@ export default async function PortfolioPage() {
                     {
                       label: "Total Yield Earned",
                       value: `$${formatCurrency(realPaidYieldTotal)}`,
-                      color: "text-accent-light",
+                      color: "text-accent",
                     },
                     {
                       label: "Prorated Unrealized Yield",
@@ -610,7 +610,7 @@ export default async function PortfolioPage() {
                     {
                       label: "Unrealized Gain",
                       value: `+$${formatCurrency(totalYield)}`,
-                      color: "text-accent-light",
+                      color: "text-accent",
                     },
                   ].map((row, i) => (
                     <div

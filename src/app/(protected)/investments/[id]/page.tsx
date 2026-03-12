@@ -53,19 +53,19 @@ export default async function ProjectDetailPage({
   return (
     <>
       <Header title={project.ticker} />
-      <div className="pt-14 pb-28 animate-fadeIn">
+      <div className="pb-28 animate-fadeIn">
         {/* Hero Section — Full-width with image overlay */}
         <div className="relative overflow-hidden">
           {project.imageUrl?.startsWith("http") ? (
             <div className="absolute inset-0">
               <img src={project.imageUrl} alt={project.name} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20" />
             </div>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-dark to-purple">
-              <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 opacity-[0.07]">
                 <div className="w-full h-full flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[160px]">
+                  <span className="material-symbols-outlined text-white text-[180px]">
                     {getCategoryIcon(project.category)}
                   </span>
                 </div>
@@ -119,7 +119,7 @@ export default async function ProjectDetailPage({
                 { label: "Min. Investment", value: `$${formatCurrency(Number(project.minInvestment), { maximumFractionDigits: 0, minimumFractionDigits: 0 })}`, icon: "payments", color: "text-purple-400" },
                 { label: "Payout", value: project.payout, icon: "account_balance_wallet", color: "text-amber-400" },
               ].map((metric) => (
-                <div key={metric.label} className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
+                <div key={metric.label} className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`material-symbols-outlined text-base ${metric.color}`}>{metric.icon}</span>
                     <span className="text-[11px] text-white/60 uppercase tracking-wider font-medium">{metric.label}</span>
@@ -189,15 +189,15 @@ export default async function ProjectDetailPage({
 
         {/* Tab Navigation */}
         <div className="px-5 lg:px-8 mt-6">
-          <div className="flex gap-1 overflow-x-auto hide-scrollbar bg-background-tertiary rounded-xl p-1">
+          <div className="flex gap-1 overflow-x-auto hide-scrollbar bg-background-tertiary rounded-2xl p-1">
             {tabs.map((t) => (
               <Link
                 key={t.key}
                 href={`/investments/${id}?tab=${t.key}`}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   activeTab === t.key
                     ? "bg-card text-primary shadow-sm"
-                    : "text-text-muted hover:text-primary"
+                    : "text-text-muted hover:text-text-primary"
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">{t.icon}</span>
@@ -443,11 +443,11 @@ export default async function ProjectDetailPage({
 
       {/* Fixed Bottom CTA */}
       {project.status === "ACTIVE" && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-40">
+        <div className="fixed bottom-16 md:bottom-0 left-0 md:left-[240px] right-0 z-40">
           <div className="max-w-5xl mx-auto px-5 pb-4 pt-3 bg-gradient-to-t from-background via-background/95">
             <Link
               href={`/investments/${project.id}/invest`}
-              className="flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-primary to-primary-dark text-white text-center font-bold rounded-xl shadow-glow hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-px active:scale-[0.98] transition-all text-base"
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-primary to-purple text-white text-center font-bold rounded-2xl shadow-glow hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-px active:scale-[0.98] transition-all text-[15px]"
             >
               <span className="material-symbols-outlined text-xl">rocket_launch</span>
               Invest Now — Min ${formatCurrency(Number(project.minInvestment), { maximumFractionDigits: 0, minimumFractionDigits: 0 })}

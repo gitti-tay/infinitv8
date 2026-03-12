@@ -1,4 +1,5 @@
 import { getCategoryLabel, getRiskLabelShort } from "@/lib/utils/format";
+import Link from "next/link";
 
 interface Project {
   id: string;
@@ -18,105 +19,83 @@ function toNumber(val: number | { toNumber?: () => number }): number {
   return Number(val);
 }
 
-const categoryColors: Record<string, string> = {
-  HEALTHCARE: "text-primary bg-primary/10",
-  AGRICULTURE: "text-accent bg-accent/10",
-  REAL_ESTATE: "text-cyan bg-cyan/10",
-  COMMODITIES: "text-amber bg-amber/10",
+const categoryGradients: Record<string, string> = {
+  HEALTHCARE: "from-primary to-primary-dark",
+  AGRICULTURE: "from-accent to-accent-dark",
+  REAL_ESTATE: "from-purple to-purple-dark",
+  COMMODITIES: "from-amber to-amber-dark",
 };
 
 const riskColors: Record<string, string> = {
-  LOW: "bg-accent/10 text-accent-light",
+  LOW: "bg-accent/10 text-accent",
   MEDIUM: "bg-amber/10 text-amber",
   HIGH: "bg-destructive/10 text-destructive",
 };
 
 export function MarketOverview({ projects }: { projects: Project[] }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 shadow-soft">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-card border border-border rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-5">
         <h3 className="text-base font-bold text-text-primary">
           RWA Market Overview
         </h3>
-        <a
-          href="/investments"
+        <Link
+          href="/marketplace"
           className="text-xs text-primary font-medium hover:underline"
         >
           Browse All &rarr;
-        </a>
+        </Link>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-[13px]">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-2 pr-4 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                Asset
-              </th>
-              <th className="text-right py-2 px-4 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                APY
-              </th>
-              <th className="text-right py-2 px-4 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                Category
-              </th>
-              <th className="text-right py-2 px-4 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                Risk
-              </th>
-              <th className="text-right py-2 pl-4 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                Investors
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.map((project) => {
-              const apy = toNumber(project.apy);
-              const colorClass =
-                categoryColors[project.category] ?? "text-text-muted bg-background-tertiary";
-              const riskClass =
-                riskColors[project.riskLevel] ?? "bg-background-tertiary text-text-muted";
 
-              return (
-                <tr
-                  key={project.id}
-                  className="border-b border-border last:border-b-0"
-                >
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold ${colorClass}`}
-                      >
-                        {project.ticker.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-text-primary">
-                          {project.ticker}
-                        </p>
-                        <p className="text-[11px] text-text-muted truncate max-w-[140px]">
-                          {project.name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-right py-3 px-4 font-semibold text-accent-light">
-                    {apy}%
-                  </td>
-                  <td className="text-right py-3 px-4 text-text-secondary">
-                    {getCategoryLabel(project.category)}
-                  </td>
-                  <td className="text-right py-3 px-4">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-semibold ${riskClass}`}
-                    >
-                      {getRiskLabelShort(project.riskLevel)}
-                    </span>
-                  </td>
-                  <td className="text-right py-3 pl-4 font-mono font-semibold text-text-secondary">
-                    {project.investors.toLocaleString()}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Horizontal scroll cards */}
+      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
+        {projects.map((project) => {
+          const apy = toNumber(project.apy);
+          const raised = toNumber(project.raisedPercent);
+          const gradient = categoryGradients[project.category] ?? "from-primary to-primary-dark";
+          const riskClass = riskColors[project.riskLevel] ?? "bg-background-tertiary text-text-muted";
+
+          return (
+            <Link
+              key={project.id}
+              href={`/investments/${project.id}`}
+              className="group flex-shrink-0 w-[220px] bg-background-secondary border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all duration-200"
+            >
+              {/* Gradient header */}
+              <div className={`h-2 bg-gradient-to-r ${gradient}`} />
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                    <span className="text-white text-xs font-bold">{project.ticker.charAt(0)}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-text-primary truncate">{project.ticker}</p>
+                    <p className="text-[11px] text-text-muted truncate">{getCategoryLabel(project.category)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xl font-bold text-accent tabular-nums">{apy}%</span>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${riskClass}`}>
+                    {getRiskLabelShort(project.riskLevel)}
+                  </span>
+                </div>
+
+                {/* Progress */}
+                <div className="h-1 bg-background-tertiary rounded-full overflow-hidden mb-1.5">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${gradient}`}
+                    style={{ width: `${Math.min(100, raised)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-text-muted">
+                  <span>{raised.toFixed(0)}% funded</span>
+                  <span>{project.investors} investors</span>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

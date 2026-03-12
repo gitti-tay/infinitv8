@@ -26,7 +26,7 @@ const SECURITY_ITEMS = [
   {
     icon: "fingerprint",
     iconBg: "bg-accent/10",
-    iconColor: "text-accent-light",
+    iconColor: "text-accent",
     title: "Biometric Authentication",
     desc: "Use Face ID or fingerprint to authorize transactions",
     type: "toggle" as const,
@@ -35,7 +35,7 @@ const SECURITY_ITEMS = [
   {
     icon: "lock",
     iconBg: "bg-primary/10",
-    iconColor: "text-primary-light",
+    iconColor: "text-primary",
     title: "Withdrawal Address Whitelist",
     desc: "Only allow withdrawals to pre-approved addresses (24h lock period)",
     type: "toggle" as const,
@@ -73,10 +73,10 @@ const SECURITY_ITEMS = [
 function getTxConfig(type: string) {
   switch (type) {
     case "INVESTMENT": return { icon: "trending_up", iconBg: "bg-purple/10", iconColor: "text-purple", label: "Investment" };
-    case "YIELD":      return { icon: "payments", iconBg: "bg-accent/10", iconColor: "text-accent-light", label: "Yield" };
-    case "DEPOSIT":    return { icon: "add_circle", iconBg: "bg-primary/10", iconColor: "text-primary-light", label: "Deposit" };
+    case "YIELD":      return { icon: "payments", iconBg: "bg-accent/10", iconColor: "text-accent", label: "Yield" };
+    case "DEPOSIT":    return { icon: "add_circle", iconBg: "bg-primary/10", iconColor: "text-primary", label: "Deposit" };
     case "WITHDRAWAL": return { icon: "arrow_circle_up", iconBg: "bg-destructive/10", iconColor: "text-destructive", label: "Withdrawal" };
-    case "TRANSFER":   return { icon: "swap_horiz", iconBg: "bg-primary/10", iconColor: "text-primary-light", label: "Transfer" };
+    case "TRANSFER":   return { icon: "swap_horiz", iconBg: "bg-primary/10", iconColor: "text-primary", label: "Transfer" };
     default:           return { icon: "receipt", iconBg: "bg-gray-100", iconColor: "text-gray-500", label: type };
   }
 }
@@ -134,14 +134,14 @@ export default function WalletPage() {
   return (
     <>
       <Header title="Wallet" showBack={false} />
-      <div className="pt-16 pb-24 md:pb-8 px-5 animate-fadeIn">
+      <div className="pb-24 md:pb-8 p-4 md:p-6 lg:p-8 animate-fadeIn max-w-[1400px]">
 
         {/* Wallet Hero */}
-        <div className="mt-4 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15 rounded-xl p-6 md:p-8 mb-6">
+        <div className="bg-gradient-to-br from-primary/[0.06] to-accent/[0.04] dark:from-primary/[0.12] dark:to-accent/[0.08] border border-border rounded-2xl p-6 md:p-8 mb-6">
           <p className="text-[11px] uppercase tracking-widest text-text-muted mb-1">
             Wallet Balance (Stablecoins)
           </p>
-          <p className="text-4xl md:text-5xl font-black tracking-tight font-mono">
+          <p className="text-4xl md:text-5xl font-black tracking-tight tabular-nums">
             ${Math.floor(totalUsdBalance).toLocaleString("en-US")}
             <span className="text-xl text-text-muted">
               .{(totalUsdBalance % 1).toFixed(2).slice(2)}
@@ -157,7 +157,7 @@ export default function WalletPage() {
             {isConnected && (
               <span className="text-sm text-text-secondary">
                 Network:{" "}
-                <span className="font-semibold text-primary-light">
+                <span className="font-semibold text-primary">
                   {chain?.name ?? "Base"}
                 </span>
               </span>
@@ -178,7 +178,7 @@ export default function WalletPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
           {/* Token Balances */}
-          <div className="bg-card border border-border rounded-xl p-6">
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h3 className="text-base font-bold mb-4">On-Chain Balances</h3>
             {!isConnected ? (
               <div className="text-center py-6">
@@ -221,7 +221,7 @@ export default function WalletPage() {
           </div>
 
           {/* Connected Wallet */}
-          <div className="bg-card border border-border rounded-xl p-6">
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h3 className="text-base font-bold mb-4">Connected Wallet</h3>
 
             {isConnected ? (
@@ -247,7 +247,7 @@ export default function WalletPage() {
                       {chain?.name ?? "Base"}
                     </p>
                   </div>
-                  <span className="px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent-light rounded-full">
+                  <span className="px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent rounded-full">
                     Connected
                   </span>
                 </div>
@@ -316,7 +316,7 @@ export default function WalletPage() {
 
         {/* Investment Token Holdings (ERC-1155) */}
         {isConnected && (
-          <div className="bg-card border border-border rounded-xl p-6 mb-6">
+          <div className="bg-card border border-border rounded-2xl p-6 mb-6">
             <h3 className="text-base font-bold mb-4">Investment Tokens (ERC-1155)</h3>
             <p className="text-xs text-text-muted mb-4">
               Tokenized investment positions on Base — verifiable on Basescan
@@ -369,7 +369,7 @@ export default function WalletPage() {
         )}
 
         {/* Security Settings */}
-        <div className="bg-card border border-border rounded-xl p-6 mb-6">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <h3 className="text-base font-bold mb-4">Security Settings</h3>
           <div className="space-y-2">
             {SECURITY_ITEMS.map((item) => (
@@ -403,7 +403,7 @@ export default function WalletPage() {
                     />
                   </button>
                 ) : (
-                  <button className="px-4 py-1.5 bg-background-secondary border border-border rounded-lg text-xs font-medium text-primary-light shrink-0 hover:border-primary/30 transition-all">
+                  <button className="px-4 py-1.5 bg-background-secondary border border-border rounded-lg text-xs font-medium text-primary shrink-0 hover:border-primary/30 transition-all">
                     {item.buttonLabel}
                   </button>
                 )}
@@ -413,10 +413,10 @@ export default function WalletPage() {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="bg-card border border-border rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold">Recent Transactions</h3>
-            <Link href="/transactions" className="text-xs text-primary-light font-medium">
+            <Link href="/transactions" className="text-xs text-primary font-medium">
               View All &rarr;
             </Link>
           </div>
@@ -458,12 +458,12 @@ export default function WalletPage() {
                             </div>
                           </td>
                           <td className="py-3 text-[13px]">{tx.project?.ticker || tx.asset || "—"}</td>
-                          <td className={`py-3 font-mono font-semibold text-[13px] ${isDebit ? "text-text-primary" : "text-accent-light"}`}>
+                          <td className={`py-3 font-mono font-semibold text-[13px] ${isDebit ? "text-text-primary" : "text-accent"}`}>
                             {isDebit ? "-" : "+"}${Math.abs(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                           </td>
                           <td className="py-3">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                              tx.status === "COMPLETED" ? "bg-accent/10 text-accent-light"
+                              tx.status === "COMPLETED" ? "bg-accent/10 text-accent"
                               : tx.status === "PENDING" ? "bg-amber/10 text-amber"
                               : "bg-destructive/10 text-destructive"
                             }`}>
@@ -514,7 +514,7 @@ export default function WalletPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-mono font-semibold text-sm ${isDebit ? "text-text-primary" : "text-accent-light"}`}>
+                        <p className={`font-mono font-semibold text-sm ${isDebit ? "text-text-primary" : "text-accent"}`}>
                           {isDebit ? "-" : "+"}${Math.abs(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </p>
                         {tx.txHash ? (
@@ -528,7 +528,7 @@ export default function WalletPage() {
                           </a>
                         ) : (
                           <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            tx.status === "COMPLETED" ? "bg-accent/10 text-accent-light" : "bg-amber/10 text-amber"
+                            tx.status === "COMPLETED" ? "bg-accent/10 text-accent" : "bg-amber/10 text-amber"
                           }`}>
                             {tx.status === "COMPLETED" ? "Completed" : "Pending"}
                           </span>

@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProviders } from "@/components/providers";
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "INFINITV8",
-  description: "Institutional-Grade Assets for Everyone",
+  title: "INFINITV8 — Institutional-Grade RWA Investment Platform",
+  description:
+    "Access fractional ownership in premium real-world assets. Earn 10-15% APY backed by real, auditable assets on Base blockchain.",
 };
 
 export default function RootLayout({
@@ -28,7 +29,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} font-body antialiased bg-background text-text-primary`}
+        className={`${inter.variable} font-body antialiased bg-background text-text-primary`}
       >
         <AuthProviders>{children}</AuthProviders>
       </body>

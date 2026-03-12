@@ -21,7 +21,6 @@ function getFormattedDate(): string {
   });
 }
 
-/** Map project category to gradient classes for investment cards */
 function getCategoryGradient(category: string) {
   switch (category) {
     case "HEALTHCARE":
@@ -30,7 +29,7 @@ function getCategoryGradient(category: string) {
         gradientTo: "to-primary-dark",
         progressGradient: "from-primary to-primary-light",
         iconBg: "bg-primary/10",
-        iconColor: "text-primary-light",
+        iconColor: "text-primary",
       };
     case "AGRICULTURE":
       return {
@@ -38,7 +37,7 @@ function getCategoryGradient(category: string) {
         gradientTo: "to-accent-dark",
         progressGradient: "from-accent to-accent-light",
         iconBg: "bg-accent/10",
-        iconColor: "text-accent-light",
+        iconColor: "text-accent",
       };
     case "REAL_ESTATE":
       return {
@@ -62,12 +61,11 @@ function getCategoryGradient(category: string) {
         gradientTo: "to-primary-dark",
         progressGradient: "from-primary to-primary-light",
         iconBg: "bg-primary/10",
-        iconColor: "text-primary-light",
+        iconColor: "text-primary",
       };
   }
 }
 
-/** Calculate maturity progress as a percentage (0-100) */
 function getMaturityProgress(investedAt: Date, termMonths: number): number {
   const now = new Date();
   const maturityDate = new Date(investedAt);
@@ -92,13 +90,11 @@ export default async function DashboardPage() {
     include: { project: true },
   });
 
-  /* ── Compute real metrics ── */
   const totalInvested = investments.reduce(
     (sum, inv) => sum + Number(inv.amount),
     0
   );
 
-  // Paid yield payouts
   const paidPayouts = await prisma.yieldPayout.findMany({
     where: { userId: user?.id ?? "", paid: true },
   });
@@ -107,7 +103,6 @@ export default async function DashboardPage() {
     0
   );
 
-  // Prorated yield for investments that haven't paid yet
   const now = new Date();
   const proratedYield = investments.reduce((sum, inv) => {
     const amount = Number(inv.amount);
@@ -127,14 +122,12 @@ export default async function DashboardPage() {
         investments.length
       : 0;
 
-  // Monthly yield estimate: total annual yield / 12
   const annualYieldEstimate = investments.reduce(
     (sum, inv) => sum + Number(inv.amount) * (Number(inv.project.apy) / 100),
     0
   );
   const monthlyYield = annualYieldEstimate / 12;
 
-  // Next payout date: earliest unpaid yield payout, or fallback text
   const nextUnpaidPayout = await prisma.yieldPayout.findFirst({
     where: { userId: user?.id ?? "", paid: false },
     orderBy: { payoutDate: "asc" },
@@ -147,7 +140,6 @@ export default async function DashboardPage() {
       })
     : "No payouts scheduled";
 
-  // Balance change percent (yield earned vs invested, all time)
   const balanceChangePercent =
     totalInvested > 0
       ? Number(((totalYieldEarned / totalInvested) * 100).toFixed(1))
@@ -167,8 +159,7 @@ export default async function DashboardPage() {
     vsMarketPercent: 0,
   };
 
-  /* ── Map real investments to active investment display shape ── */
-  const activeInvestments = investments.slice(0, 3).map((inv) => {
+  const activeInvestments = investments.slice(0, 4).map((inv) => {
     const amount = Number(inv.amount);
     const apy = Number(inv.project.apy);
     const daysHeld = Math.max(
@@ -183,6 +174,7 @@ export default async function DashboardPage() {
 
     return {
       id: inv.id,
+      projectId: inv.projectId,
       ticker: inv.project.ticker,
       name: getCategoryLabel(inv.project.category),
       icon: getCategoryIcon(inv.project.category),
@@ -195,7 +187,6 @@ export default async function DashboardPage() {
     };
   });
 
-  /* ── Upcoming payouts from YieldPayout where paid = false ── */
   const unpaidPayouts = await prisma.yieldPayout.findMany({
     where: { userId: user?.id ?? "", paid: false },
     include: { project: true },
@@ -220,7 +211,6 @@ export default async function DashboardPage() {
     };
   });
 
-  /* ── Recent activity for the RecentActivity component ── */
   const recentTransactions = await prisma.transaction.findMany({
     where: { userId: user?.id ?? "" },
     include: { project: true },
@@ -268,12 +258,12 @@ export default async function DashboardPage() {
   const firstName = user?.name?.split(" ")[0] || "Investor";
 
   return (
-    <div className="p-5 md:p-8 animate-fadeIn">
-      {/* ── Welcome Section ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+    <div className="p-4 md:p-6 lg:p-8 animate-fadeIn max-w-[1400px]">
+      {/* Welcome Section */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
         <div>
-          <p className="text-[13px] text-text-muted mb-1">
-            {getGreeting()}, {getFormattedDate()}
+          <p className="text-[13px] text-text-muted mb-0.5">
+            {getGreeting()} &middot; {getFormattedDate()}
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight">
             Welcome back, {firstName}
@@ -282,182 +272,131 @@ export default async function DashboardPage() {
         <div className="flex gap-2">
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-lg text-[13px] font-semibold transition-colors hover:bg-primary-dark"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-[13px] font-semibold transition-all hover:shadow-glow"
           >
-            <span className="material-symbols-outlined text-base">
-              add_circle
-            </span>
+            <span className="material-symbols-outlined text-base">add_circle</span>
             Deposit
           </Link>
           <Link
-            href="/wallet"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-background-tertiary border border-border text-text-secondary rounded-lg text-[13px] font-semibold transition-colors hover:text-text-primary"
+            href="/marketplace"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-accent to-accent-dark text-white rounded-xl text-[13px] font-semibold transition-all hover:shadow-glow"
           >
-            <span className="material-symbols-outlined text-base">
-              arrow_circle_up
-            </span>
-            Withdraw
-          </Link>
-          <Link
-            href="/investments"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-accent text-white rounded-lg text-[13px] font-semibold transition-colors hover:bg-accent-dark"
-          >
-            <span className="material-symbols-outlined text-base">
-              trending_up
-            </span>
+            <span className="material-symbols-outlined text-base">trending_up</span>
             Invest
           </Link>
         </div>
       </div>
 
-      {/* ── Metrics Row ── */}
+      {/* Metrics */}
       <MetricsCards metrics={metrics} />
 
-      {/* ── Active Investments + Upcoming Payouts ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        {/* Active Investments */}
-        <div className="bg-card border border-border rounded-xl p-6 shadow-soft">
+      {/* Active Investments + Payouts & Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+        {/* Active Investments — takes 3 cols */}
+        <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-text-primary">
-              Active Investments
-            </h3>
-            <Link
-              href="/portfolio"
-              className="text-xs text-primary font-medium hover:underline"
-            >
+            <h3 className="text-[15px] font-bold text-text-primary">Active Investments</h3>
+            <Link href="/portfolio" className="text-xs text-primary font-medium hover:underline">
               View All &rarr;
             </Link>
           </div>
 
-          <div>
-            {activeInvestments.length === 0 ? (
-              <div className="py-8 text-center">
-                <span className="material-symbols-outlined text-3xl text-text-muted mb-2 block">
-                  account_balance_wallet
-                </span>
-                <p className="text-sm text-text-muted">No active investments yet</p>
-                <Link
-                  href="/investments"
-                  className="inline-flex items-center gap-1 mt-3 px-4 py-2 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-dark transition-colors"
-                >
-                  Browse Projects
-                </Link>
-              </div>
-            ) : (
-              activeInvestments.map((inv, idx) => (
-              <div
-                key={inv.id}
-                className={`flex items-center gap-4 py-3.5 ${
-                  idx < activeInvestments.length - 1
-                    ? "border-b border-border"
-                    : ""
-                }`}
+          {activeInvestments.length === 0 ? (
+            <div className="py-10 text-center">
+              <span className="material-symbols-outlined text-3xl text-text-muted mb-2 block">account_balance_wallet</span>
+              <p className="text-sm text-text-muted mb-3">No active investments yet</p>
+              <Link
+                href="/marketplace"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-semibold rounded-xl hover:shadow-glow transition-all"
               >
-                <div
-                  className={`w-10 h-10 rounded-[10px] bg-gradient-to-br ${inv.gradientFrom} ${inv.gradientTo} flex items-center justify-center shrink-0`}
+                Browse Projects
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {activeInvestments.map((inv) => (
+                <Link
+                  key={inv.id}
+                  href={`/investments/${inv.projectId}`}
+                  className="flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-background-secondary/60 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-lg text-white">
-                    {inv.icon}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-text-primary">
-                      {inv.ticker} &mdash; {inv.name}
-                    </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-semibold bg-accent/10 text-accent-light">
-                      +{inv.gainPercent}%
-                    </span>
+                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${inv.gradientFrom} ${inv.gradientTo} flex items-center justify-center shrink-0`}>
+                    <span className="material-symbols-outlined text-base text-white">{inv.icon}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-text-muted">
-                      ${formatCurrency(inv.invested, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} invested
-                    </span>
-                    <span className="text-sm font-bold font-mono text-text-primary">
-                      ${formatCurrency(inv.currentValue, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[13px] font-semibold text-text-primary truncate">
+                        {inv.ticker}
+                      </p>
+                      <span className="text-[13px] font-bold tabular-nums text-text-primary">
+                        ${formatCurrency(inv.currentValue, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-0.5">
+                      <span className="text-[11px] text-text-muted">{inv.name}</span>
+                      <span className="inline-flex items-center text-[11px] font-semibold text-accent">
+                        +{inv.gainPercent}%
+                      </span>
+                    </div>
+                    <div className="h-1 bg-background-tertiary rounded-full overflow-hidden mt-2">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${inv.progressGradient}`}
+                        style={{ width: `${inv.maturityPercent}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-0.5 text-[10px] text-text-muted">
+                      <span>{inv.maturityPercent}% maturity</span>
+                      <span>{inv.apy}% APY</span>
+                    </div>
                   </div>
-                  {/* Progress bar */}
-                  <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden mt-2">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${inv.progressGradient}`}
-                      style={{ width: `${inv.maturityPercent}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1 text-[11px] text-text-muted">
-                    <span>{inv.maturityPercent}% to maturity</span>
-                    <span>{inv.apy}% APY</span>
-                  </div>
-                </div>
-              </div>
-            ))
-            )}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right Column: Upcoming Payouts + Recent Activity */}
-        <div className="flex flex-col gap-4">
+        {/* Right Column: Payouts + Activity */}
+        <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Upcoming Payouts */}
-          <div className="bg-card border border-border rounded-xl p-5 shadow-soft">
+          <div className="bg-card border border-border rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-text-primary">
-                Upcoming Payouts
-              </h3>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-[11px] font-semibold bg-accent/10 text-accent-light">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
+              <h3 className="text-sm font-bold text-text-primary">Upcoming Payouts</h3>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/10 text-accent">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block animate-pulse" />
                 {upcomingPayouts.length} scheduled
               </span>
             </div>
             {upcomingPayouts.length === 0 ? (
               <div className="py-6 text-center">
-                <span className="material-symbols-outlined text-2xl text-text-muted mb-1 block">
-                  event_busy
-                </span>
+                <span className="material-symbols-outlined text-2xl text-text-muted mb-1 block">event_busy</span>
                 <p className="text-xs text-text-muted">No upcoming payouts</p>
               </div>
             ) : (
-              <>
-                <div className="flex flex-col gap-2.5">
-                  {upcomingPayouts.map((payout) => (
-                    <div
-                      key={payout.id}
-                      className="flex items-center gap-3 p-2.5 bg-background-tertiary rounded-lg"
-                    >
-                      <div
-                        className={`w-9 h-9 rounded-lg ${payout.iconBg} flex items-center justify-center`}
-                      >
-                        <span
-                          className={`material-symbols-outlined text-base ${payout.iconColor}`}
-                        >
-                          event
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-[13px] font-semibold text-text-primary">
-                          {payout.name}
-                        </p>
-                        <p className="text-[11px] text-text-muted">{payout.date}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-accent-light font-mono">
-                          ${formatCurrency(payout.amount)}
-                        </p>
-                        <p className="text-[10px] text-text-muted">
-                          {payout.frequency}
-                        </p>
-                      </div>
+              <div className="space-y-2">
+                {upcomingPayouts.map((payout) => (
+                  <div
+                    key={payout.id}
+                    className="flex items-center gap-3 p-2.5 bg-background-secondary/60 rounded-xl"
+                  >
+                    <div className={`w-8 h-8 rounded-lg ${payout.iconBg} flex items-center justify-center`}>
+                      <span className={`material-symbols-outlined text-sm ${payout.iconColor}`}>event</span>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                  <span className="text-xs text-text-muted">
-                    Upcoming Payouts
-                  </span>
-                  <span className="text-base font-extrabold text-accent-light font-mono">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-text-primary truncate">{payout.name}</p>
+                      <p className="text-[10px] text-text-muted">{payout.date}</p>
+                    </div>
+                    <span className="text-[13px] font-bold text-accent tabular-nums">
+                      ${formatCurrency(payout.amount)}
+                    </span>
+                  </div>
+                ))}
+                <div className="pt-2 border-t border-border flex justify-between items-center">
+                  <span className="text-[11px] text-text-muted">Total Expected</span>
+                  <span className="text-sm font-bold text-accent tabular-nums">
                     ${formatCurrency(upcomingPayouts.reduce((s, p) => s + p.amount, 0))}
                   </span>
                 </div>
-              </>
+              </div>
             )}
           </div>
 
@@ -466,7 +405,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Market Overview ── */}
+      {/* Market Overview */}
       <MarketOverview
         projects={projects.map((p) => ({
           id: p.id,
